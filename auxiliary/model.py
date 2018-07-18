@@ -141,16 +141,12 @@ class AE_AtlasNet_Humans(nn.Module):
         point_set_HR = mesh_HR.vertices
         point_set_HR = point_set_HR - (mesh_HR.bbox[0] + mesh_HR.bbox[1]) / 2
         # print(np.shape(centroid))
-        print(np.shape(mesh.vertices))
-        print(np.shape(mesh_HR.vertices))
         # print(np.shape(mesh_HR.vertices))
         # point_set = mesh.vertices[:, 0:3] - centroid
         self.vertex = torch.from_numpy(point_set).cuda().float()
         self.vertex_HR = torch.from_numpy(point_set_HR).cuda().float()
         self.num_vertex = self.vertex.size(0)
         self.num_vertex_HR = self.vertex_HR.size(0)
-        print(self.num_vertex)
-        print(self.num_vertex_HR)
 
     def forward2(self, x):
         x = self.encoder(x)

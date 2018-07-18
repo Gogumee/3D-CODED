@@ -18,15 +18,14 @@ from utils import *
 from ply import *
 import os
 import reconstruct
-
+import time
 from sklearn.neighbors import NearestNeighbors
-
 sys.path.append("./nndistance/")
 from modules.nnd import NNDModule
+import visdom
+import global_variables
 
-distChamfer = NNDModule()
 
-neigh = NearestNeighbors(1, 0.4)
 
 def compute_correspondances(source_p, source_reconstructed_p, target_p, target_reconstructed_p):
     # inputs are all filepaths
@@ -40,7 +39,7 @@ def compute_correspondances(source_p, source_reconstructed_p, target_p, target_r
         neigh.fit(source_reconstructed.vertices)
         idx_knn = neigh.kneighbors(source.vertices, return_distance=False)
 
-        #correspondances thought template
+        #correspondances throught template
         closest_points = target_reconstructed.vertices[idx_knn]
         closest_points = np.mean(closest_points, 1, keepdims=False)
 
@@ -57,7 +56,47 @@ def compute_correspondances(source_p, source_reconstructed_p, target_p, target_r
         return
 
 if __name__ == '__main__':
-    print("computing correspondences for" + sys.argv[1] + "and" + sys.argv[2])
-    reconstruct.reconstruct(sys.argv[1])
-    reconstruct.reconstruct(sys.argv[2])
-    compute_correspondances(sys.argv[1], sys.argv[1] + "FinalReconstruction.ply", sys.argv[2], sys.argv[2] + "FinalReconstruction.ply")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--HR', type=int, default=1, help='Use high Resolution template ?')
+    parser.add_argument('--nepoch', type=int, default=3000, help='number of epochs to train for during the regression step')
+    parser.add_argument('--model', type=str, default = 'trained_models/sup_human_network_last.pth',  help='your path to the trained model')
+    parser.add_argument('--inputA', type=str, default =  "data/test_scan_000.ply",  help='your path to mesh A')
+    parser.add_argument('--inputB', type=str, default =  "data/test_scan_001.ply",  help='your path to mesh B')
+    parser.add_argument('--num_points', type=int, default = 6890,  help='number of points fed to poitnet')
+    parser.add_argument('--bottleneck', type=int, default=1024, help='visdom environment')
+    parser.add_argument('--env', type=str, default="CODED", help='visdom environment')
+    parser.add_argument('--clean', type=int, default=1, help='remove points that dont belong to any edges')
+
+    opt = parser.parse_args()
+    global_variables.opt = opt
+    vis = visdom.Visdom(port=8888, env=opt.env)
+
+    distChamfer = NNDModule()
+
+    # load network
+    global_variables.network = AE_AtlasNet_Humans(num_points=opt.num_points, bottleneck_size=opt.bottleneck)
+    global_variables.network.cuda()
+    global_variables.network.apply(weights_init)
+    if opt.model != '':
+        global_variables.network.load_state_dict(torch.load(opt.model))
+    global_variables.network.eval()
+
+    neigh = NearestNeighbors(1, 0.4)
+    opt.manualSeed = random.randint(1, 10000) # fix seed
+    # print("Random Seed: ", opt.manualSeed)
+    random.seed(opt.manualSeed)
+    torch.manual_seed(opt.manualSeed)
+    cudnn.benchmark = True
+
+    start = time.time()
+    print("computing correspondences for " + opt.inputA + " and " + opt.inputB)
+
+    # Reconstruct meshes
+    reconstruct.reconstruct(opt.inputA)
+    reconstruct.reconstruct(opt.inputB)
+
+    # Compute the correspondences through the recontruction
+    compute_correspondances(opt.inputA, opt.inputA[:-4] + "FinalReconstruction.ply", opt.inputB, opt.inputB[:-4] + "FinalReconstruction.ply")
+    end = time.time()
+    print("ellapsed time is ", end - start, " seconds !")

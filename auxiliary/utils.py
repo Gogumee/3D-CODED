@@ -2,7 +2,16 @@ import os
 import random
 import numpy as np
 import sys
-import PyMesh
+import pymesh
+
+def test_orientation(input_mesh):
+    # This fonction tests wether widest axis of the input mesh is the Z axis
+    # input mesh
+    # output : boolean or warning
+    bbox = input_mesh.bbox
+    if not np.argmax(np.abs(bbox[1] - bbox[0])) == 1:
+        print("The widest axis is not the Y axis, you should make sure the mesh is aligned on the Y axis for the autoencoder to work (check out the example in /data)")
+    return 
 
 def clean(input_mesh):
     # This function remove faces, and vertex that doesn't belong to any face. Intended to be used before a feed forward pass in pointNet
