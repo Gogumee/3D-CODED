@@ -5,18 +5,22 @@ import sys
 import pymesh
 
 def test_orientation(input_mesh):
-    # This fonction tests wether widest axis of the input mesh is the Z axis
-    # input mesh
-    # output : boolean or warning
+    """
+    This fonction tests wether widest axis of the input mesh is the Z axis
+    input mesh
+    output : boolean or warning
+    """
     bbox = input_mesh.bbox
     if not np.argmax(np.abs(bbox[1] - bbox[0])) == 1:
         print("The widest axis is not the Y axis, you should make sure the mesh is aligned on the Y axis for the autoencoder to work (check out the example in /data)")
     return 
 
 def clean(input_mesh):
-    # This function remove faces, and vertex that doesn't belong to any face. Intended to be used before a feed forward pass in pointNet
-    # Input : mesh
-    # output : cleaned mesh
+    """
+    This function remove faces, and vertex that doesn't belong to any face. Intended to be used before a feed forward pass in pointNet
+    Input : mesh
+    output : cleaned mesh
+    """
     pts = input_mesh.vertices
     faces = input_mesh.faces
     faces = faces.reshape(-1)
@@ -26,10 +30,12 @@ def clean(input_mesh):
     return mesh
 
 def scale(input_mesh, mesh_ref):
-    # This function scales the input mesh to have the same volume as a reference mesh Intended to be used before a feed forward pass in pointNet
-    # Input : file path
-    # mesh_ref : reference mesh path
-    # output : scaled mesh
+    """
+    This function scales the input mesh to have the same volume as a reference mesh Intended to be used before a feed forward pass in pointNet
+    Input : file path
+    mesh_ref : reference mesh path
+    output : scaled mesh
+    """
     mesh = pymesh.load_mesh(input)
     area = np.power(mesh_ref.volume / input_mesh.volume, 1.0/3)
     mesh= pymesh.form_mesh( vertices =  input_mesh.vertices * area, faces= input_mesh.faces)

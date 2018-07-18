@@ -32,23 +32,27 @@ def convert_as(src, trg):
 ########################################################################
 class Laplacian(torch.autograd.Function):
     def __init__(self, faces):
-        # Faces is B x F x 3, cuda torch Variabe.
-        # Reuse faces.
+        """
+        Faces is B x F x 3, cuda torch Variabe.
+        Reuse faces.
+        """
         self.F_np = faces.data.cpu().numpy()
         self.F = faces.data
         self.L = None
 
     def forward(self, V):
-        # If forward is explicitly called, V is still a Parameter or Variable
-        # But if called through __call__ it's a tensor.
-        # This assumes __call__ was used.
-        #
-        # Input:
-        #   V: B x N x 3
-        #   F: B x F x 3
-        # Outputs: Lx B x N x 3
-        #
-        # Numpy also doesnt support sparse tensor, so stack along the batch
+        """
+        If forward is explicitly called, V is still a Parameter or Variable
+        But if called through __call__ it's a tensor.
+        This assumes __call__ was used.
+        
+        Input:
+           V: B x N x 3
+           F: B x F x 3
+        Outputs: Lx B x N x 3
+        
+         Numpy also doesnt support sparse tensor, so stack along the batch
+        """
 
         V_np = V.cpu().numpy()
         batchV = V_np.reshape(-1, 3)
@@ -105,14 +109,16 @@ class Laplacian(torch.autograd.Function):
 
 
 def cotangent(V, F):
-    # Input:
-    #   V: B x N x 3
-    #   F: B x F  x3
-    # Outputs:
-    #   C: B x F x 3 list of cotangents corresponding
-    #     angles for triangles, columns correspond to edges 23,31,12
+    """
+    Input:
+      V: B x N x 3
+      F: B x F  x3
+    Outputs:
+      C: B x F x 3 list of cotangents corresponding
+        angles for triangles, columns correspond to edges 23,31,12
 
-    # B x F x 3 x 3
+    B x F x 3 x 3
+    """
     indices_repeat = torch.stack([F, F, F], dim=2)
 
     #v1 is the list of first triangles B*F*3, v2 second and v3 third

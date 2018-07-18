@@ -1,4 +1,6 @@
-#       HAKUNA MATATA
+"""
+      HAKUNA MATATA
+"""
 
 import sys
 import numpy as np

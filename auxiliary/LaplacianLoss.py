@@ -16,6 +16,7 @@ class LaplacianLoss(object):
         self.curve_gt = torch.norm(tmp.view(-1, tmp.size(2)), p=2, dim=1).float()
         if not self.toref:
             self.curve_gt = self.curve_gt*0
+    
     def __call__(self, verts):
         self.Lx = self.laplacian(verts)
         # Reshape to BV x 3

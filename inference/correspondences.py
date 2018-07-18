@@ -6,11 +6,8 @@ import torch
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.utils.data
-from torch.autograd import Variable
 import sys
-import matplotlib.pyplot as plt
 import pymesh
-import glob
 sys.path.append('./auxiliary/')
 from datasetFaust import *
 from model import *
@@ -28,6 +25,14 @@ import global_variables
 
 
 def compute_correspondances(source_p, source_reconstructed_p, target_p, target_reconstructed_p):
+    """
+    Given 2 meshes, and their reconstruction, compute correspondences between the 2 meshes through neireast neighbors
+    :param source_p: path for source mesh
+    :param source_reconstructed_p: path for source mesh reconstructed
+    :param target_p: path for target mesh
+    :param target_reconstructed_p: path for target mesh reconstructed
+    :return: None but save a file with correspondences
+    """
     # inputs are all filepaths
     with torch.no_grad():
         source = pymesh.load_mesh(source_p)

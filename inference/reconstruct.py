@@ -1,8 +1,5 @@
 from __future__ import print_function
-import argparse
-import random
 import numpy as np
-import torch.backends.cudnn as cudnn
 import torch.utils.data
 from torch.autograd import Variable
 import sys
@@ -11,10 +8,8 @@ from model import *
 from utils import *
 from ply import *
 import sys
-import os
 sys.path.append("./nndistance/")
 from modules.nnd import NNDModule
-import visdom
 distChamfer = NNDModule()
 import global_variables
 
@@ -23,8 +18,11 @@ val_loss = AverageValueMeter()
 
 
 def regress(points):
-    # search the latent space to global_variables. Optimize reconstruction using the Chamfer Distance
-    # return the final reconstruction after optimisation
+    """
+    search the latent space to global_variables. Optimize reconstruction using the Chamfer Distance
+    :param points: input points to reconstruct
+    :return pointsReconstructed: final reconstruction after optimisation
+    """
     points = Variable(points.data, requires_grad=True)
     latent_code = global_variables.network.encoder(points)
     lrate = 0.001  # learning rate
@@ -53,6 +51,10 @@ def regress(points):
     return pointsReconstructed
 
 def run(input):
+    """
+    :param input: input mesh to reconstruct optimally.
+    :return: final reconstruction after optimisation
+    """
     if not global_variables.opt.HR:
         mesh_ref = global_variables.mesh_ref_LR
     else:
@@ -157,6 +159,11 @@ def run(input):
 
 
 def reconstruct(input_p):
+    """
+    Recontruct a 3D shape by deforming a template
+    :param input_p: input path
+    :return: None (but save reconstruction)
+    """
     input = pymesh.load_mesh(input_p)
     if global_variables.opt.clean:
         input = clean(input) #remove points that doesn't belong to any edges
