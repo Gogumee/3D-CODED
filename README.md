@@ -2,7 +2,8 @@
 
 This repository contains the source codes for the paper [Correspondences](http://imagine.enpc.fr/~groueixt/correspondences/). The task is to put 2 meshes in point-wise correspondence. Below, given 2 humans scans with holes, the reconstruction are in correspondence (suggested by color).
 
-<img src="README/mesh8.ply.gif" style="zoom:50%" /><img src="README/8RecBestRotReg.ply.gif" style="zoom:50%" /><img src="README/mesh25.ply.gif" style="zoom:50%" /><img src="README/25RecBestRotReg.ply.gif" style="zoom:50%" />
+<img src="README/mesh8.ply.gif" style="zoom:80%" /><img src="README/8RecBestRotReg.ply.gif" style="zoom:80%" />
+<img src="README/mesh25.ply.gif" style="zoom:80%" /><img src="README/25RecBestRotReg.ply.gif" style="zoom:80%" />
 
 ## Citing this work
 
