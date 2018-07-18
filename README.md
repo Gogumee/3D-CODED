@@ -82,7 +82,7 @@ The trained models and some corresponding results are also available online :
 Require 3 GB of RAM on the GPU and 17 sec to run (Titan X Pascal). 
 
 ```shell
-python inference/correspondences.py --cuda 1
+python inference/correspondences.py
 ```
 This script takes as input 2 meshes from ```data``` and compute correspondences in ```results```. Reconstruction are saved in ```data```
 
