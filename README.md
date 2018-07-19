@@ -108,7 +108,7 @@ You need to make sure your meshes are preprocessed correctly :
 
 ```python
 '--HR', type=int, default=1, help='Use high Resolution template for better precision in the nearest neighbor step ?'
-'--nepoch', type=int, default=3000, help='number of epochs to train for during the 		regression step'
+'--nepoch', type=int, default=3000, help='number of epochs to train for during the regression step'
 '--model', type=str, default = 'trained_models/sup_human_network_last.pth',  help='your path to the trained model'
 '--inputA', type=str, default =  "data/example_0.ply",  help='your path to mesh 0'
 '--inputB', type=str, default =  "data/example_1.ply",  help='your path to mesh 1'
