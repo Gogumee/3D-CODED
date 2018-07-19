@@ -3,7 +3,6 @@ import torch.utils.data as data
 import torch
 from utils import *
 import numpy as np
-import sys
 import pymesh
 
 mypath = ''

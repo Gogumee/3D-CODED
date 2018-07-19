@@ -1,16 +1,8 @@
 from __future__ import print_function
 import torch.utils.data as data
 import os.path
-import errno
 import torch
-import torchvision.transforms as transforms
 import numpy as np
-import cv2
-import random
-import math
-import os
-import sys
-from PIL import Image
 from utils import *
 import pymesh
 

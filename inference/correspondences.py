@@ -13,7 +13,6 @@ from datasetFaust import *
 from model import *
 from utils import *
 from ply import *
-import os
 import reconstruct
 import time
 from sklearn.neighbors import NearestNeighbors
@@ -49,15 +48,15 @@ def compute_correspondances(source_p, source_reconstructed_p, target_p, target_r
         closest_points = np.mean(closest_points, 1, keepdims=False)
 
         # project on target
-        neigh.fit(target.vertices)
-        idx_knn = neigh.kneighbors(closest_points, return_distance=False)
-        closest_points = target.vertices[idx_knn]
-        closest_points = np.mean(closest_points, 1, keepdims=False)
+        # neigh.fit(target.vertices)
+        # idx_knn = neigh.kneighbors(closest_points, return_distance=False)
+        # closest_points = target.vertices[idx_knn]
+        # closest_points = np.mean(closest_points, 1, keepdims=False)
 
         # save output
         mesh = pymesh.form_mesh(vertices=closest_points, faces=source.faces)
-        pymesh.meshio.save_mesh("results/correpondences.ply", mesh, ascii=True)
-        np.savetxt("results/correpondences.txt", closest_points, fmt='%1.10f')
+        pymesh.meshio.save_mesh("results/correspondences.ply", mesh, ascii=True)
+        np.savetxt("results/correspondences.txt", closest_points, fmt='%1.10f')
         return
 
 if __name__ == '__main__':
@@ -69,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument('--inputA', type=str, default =  "data/example_0.ply",  help='your path to mesh 0')
     parser.add_argument('--inputB', type=str, default =  "data/example_1.ply",  help='your path to mesh 1')
     parser.add_argument('--num_points', type=int, default = 6890,  help='number of points fed to poitnet')
-    parser.add_argument('--num_angles', type=int, default = 100,  help='number of angle in the search of optimal reconstruction. Set to 1, if you mesh are already facing the cannonical direction as in data/example_1.ply')
+    parser.add_argument('--num_angles', type=int, default = 300,  help='number of angle in the search of optimal reconstruction. Set to 1, if you mesh are already facing the cannonical direction as in data/example_1.ply')
     parser.add_argument('--env', type=str, default="CODED", help='visdom environment')
     parser.add_argument('--clean', type=int, default=0, help='if 1, remove points that dont belong to any edges')
     parser.add_argument('--scale', type=int, default=0, help='if 1, scale input mesh to have same volume as the template')

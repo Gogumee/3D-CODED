@@ -1,9 +1,3 @@
-
-import torch
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.utils.data
-from torch.autograd import Variable
 from model import *
 
 global network

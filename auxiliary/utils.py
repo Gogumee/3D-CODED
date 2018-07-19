@@ -1,7 +1,5 @@
-import os
 import random
 import numpy as np
-import sys
 import pymesh
 
 def test_orientation(input_mesh):
