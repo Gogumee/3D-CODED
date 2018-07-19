@@ -107,16 +107,16 @@ You need to make sure your meshes are preprocessed correctly :
 #### Options 
 
 ```python
-'--HR', type=int, default=1, help='Use high Resolution template for better precision in 			the nearest neighbor step ?'
-'--nepoch', type=int, default=3000, help='number of epochs to train for during the 					regression step'
-'--model', type=str, default = 'trained_models/sup_human_network_last.pth',  help='your 			path to the trained model'
+'--HR', type=int, default=1, help='Use high Resolution template for better precision in the nearest neighbor step ?'
+'--nepoch', type=int, default=3000, help='number of epochs to train for during the 		regression step'
+'--model', type=str, default = 'trained_models/sup_human_network_last.pth',  help='your path to the trained model'
 '--inputA', type=str, default =  "data/example_0.ply",  help='your path to mesh 0'
 '--inputB', type=str, default =  "data/example_1.ply",  help='your path to mesh 1'
 '--num_points', type=int, default = 6890,  help='number of points fed to poitnet'
-'--num_angles', type=int, default = 100,  help='number of angle in the search of optimal 		    reconstruction. Set to 1, if you mesh are already facing the cannonical 				direction as in data/example_1.ply'
+'--num_angles', type=int, default = 100,  help='number of angle in the search of optimal reconstruction. Set to 1, if you mesh are already facing the cannonical 				direction as in data/example_1.ply'
 '--env', type=str, default="CODED", help='visdom environment'
 '--clean', type=int, default=0, help='if 1, remove points that dont belong to any edges'
-'--scale', type=int, default=0, help='if 1, scale input mesh to have same volume as the 			template'
+'--scale', type=int, default=0, help='if 1, scale input mesh to have same volume as the template'
 ```
 
 
