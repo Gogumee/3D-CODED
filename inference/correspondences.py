@@ -63,15 +63,17 @@ def compute_correspondances(source_p, source_reconstructed_p, target_p, target_r
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--HR', type=int, default=1, help='Use high Resolution template ?')
+    parser.add_argument('--HR', type=int, default=1, help='Use high Resolution template for better precision in the nearest neighbor step ?')
     parser.add_argument('--nepoch', type=int, default=3000, help='number of epochs to train for during the regression step')
     parser.add_argument('--model', type=str, default = 'trained_models/sup_human_network_last.pth',  help='your path to the trained model')
-    parser.add_argument('--inputA', type=str, default =  "data/test_scan_000.ply",  help='your path to mesh A')
-    parser.add_argument('--inputB', type=str, default =  "data/test_scan_001.ply",  help='your path to mesh B')
+    parser.add_argument('--inputA', type=str, default =  "data/example_0.ply",  help='your path to mesh 0')
+    parser.add_argument('--inputB', type=str, default =  "data/example_1.ply",  help='your path to mesh 1')
     parser.add_argument('--num_points', type=int, default = 6890,  help='number of points fed to poitnet')
-    parser.add_argument('--bottleneck', type=int, default=1024, help='visdom environment')
+    parser.add_argument('--num_angles', type=int, default = 100,  help='number of angle in the search of optimal reconstruction. Set to 1, if you mesh are already facing the cannonical direction as in data/example_1.ply')
     parser.add_argument('--env', type=str, default="CODED", help='visdom environment')
-    parser.add_argument('--clean', type=int, default=1, help='remove points that dont belong to any edges')
+    parser.add_argument('--clean', type=int, default=0, help='if 1, remove points that dont belong to any edges')
+    parser.add_argument('--scale', type=int, default=0, help='if 1, scale input mesh to have same volume as the template')
+
 
     opt = parser.parse_args()
     global_variables.opt = opt
@@ -80,7 +82,7 @@ if __name__ == '__main__':
     distChamfer = NNDModule()
 
     # load network
-    global_variables.network = AE_AtlasNet_Humans(num_points=opt.num_points, bottleneck_size=opt.bottleneck)
+    global_variables.network = AE_AtlasNet_Humans(num_points=opt.num_points)
     global_variables.network.cuda()
     global_variables.network.apply(weights_init)
     if opt.model != '':

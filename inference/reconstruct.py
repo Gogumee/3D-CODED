@@ -83,7 +83,9 @@ def run(input):
     # print("loss : ",  loss_net.data[0], 0)
 
     # ---- Search best angle for best reconstruction on the Y axis---
-    for theta in np.linspace(-np.pi/2, np.pi/2, 100):
+    for theta in np.linspace(-np.pi/2, np.pi/2, global_variables.opt.num_angles):
+        if global_variables.opt.num_angles == 1:
+            theta = 0
         #  Rotate mesh by theta and renormalise
         rot_matrix = np.array([[np.cos(theta), 0, np.sin(theta)], [0, 1, 0], [- np.sin(theta), 0,  np.cos(theta)]])
         rot_matrix = Variable(torch.from_numpy(rot_matrix).float()).cuda()
@@ -155,6 +157,7 @@ def run(input):
     meshReg.set_attribute("red", mesh_ref.get_attribute("vertex_red"))
     meshReg.set_attribute("green", mesh_ref.get_attribute("vertex_green"))
     meshReg.set_attribute("blue", mesh_ref.get_attribute("vertex_blue"))
+    print("... Done!")
     return mesh, meshReg
 
 
@@ -165,6 +168,8 @@ def reconstruct(input_p):
     :return: None (but save reconstruction)
     """
     input = pymesh.load_mesh(input_p)
+    if global_variables.opt.scale:
+        input = scale(input, global_variables.mesh_ref_LR) #scale input to have the same volume as mesh_ref_LR
     if global_variables.opt.clean:
         input = clean(input) #remove points that doesn't belong to any edges
     test_orientation(input)

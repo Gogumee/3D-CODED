@@ -24,15 +24,16 @@ The project page is available [http://imagine.enpc.fr/~groueixt/correspondences/
 
 ## Install
 
+#### 
 
 #### Clone the repo
+
 ```shell
 ## Download the repository
 git clone git@github.com:ThibaultGROUEIX/template-based-correspondences.git
 ## Create python env with relevant packages
-conda create --name pytorch-atlasnet --file aux/spec-file.txt
-source activate pytorch-atlasnet
-pip install pandas visdom tqdm
+conda env create -f auxiliary/pytorch-sources.yml
+source activate pytorch-sources
 conda install pytorch=0.1.12 cuda80 -c soumith #Update cuda80 to cuda90 if relevant
 conda install torchvision
 ```
@@ -56,6 +57,12 @@ cd pytorch ; git reset --hard ea02833 #Go to this specific commit that works fin
 ```
 
 Developped in python 2.7, so might need a few adjustements for python 3.6. 
+
+#### Install Pymesh in your new Conda environment
+
+Follow the specific repo instruction [here](https://github.com/qnzhou/PyMesh).
+
+Pymesh is my favorite Geometry Processing Library for Python, it's developed by an Adobe researcher : [Qingnan Zhou](https://research.adobe.com/person/qingnan-zhou/).
 
 #### Build chamfer distance
 
@@ -90,16 +97,42 @@ This script takes as input 2 meshes from ```data``` and compute correspondences 
 
 You need to make sure your meshes are preprocessed correctly :
 
+* The meshes are loaded with pymesh, which should support a bunch of formats, but I only tested ```.ply``` files. Good converters include [Assimp](https://github.com/assimp/assimp) and [Pymesh](https://github.com/qnzhou/PyMesh).
+
+
 * The trunk axis is the Y axis (visualize your mesh against the mesh in ```data``` to make sure they are normalized in the same way). 
 * the scale should be about 1.7 for a standing human (meaning the unit for the point cloud is the ```cm```). You can automatically scale them with the flag ```--scale 1```
 
 
+#### Options 
+
+```python
+'--HR', type=int, default=1, help='Use high Resolution template for better precision in 			the nearest neighbor step ?'
+'--nepoch', type=int, default=3000, help='number of epochs to train for during the 					regression step'
+'--model', type=str, default = 'trained_models/sup_human_network_last.pth',  help='your 			path to the trained model'
+'--inputA', type=str, default =  "data/example_0.ply",  help='your path to mesh 0'
+'--inputB', type=str, default =  "data/example_1.ply",  help='your path to mesh 1'
+'--num_points', type=int, default = 6890,  help='number of points fed to poitnet'
+'--num_angles', type=int, default = 100,  help='number of angle in the search of optimal 		    reconstruction. Set to 1, if you mesh are already facing the cannonical 				direction as in data/example_1.ply'
+'--env', type=str, default="CODED", help='visdom environment'
+'--clean', type=int, default=0, help='if 1, remove points that dont belong to any edges'
+'--scale', type=int, default=0, help='if 1, scale input mesh to have same volume as the 			template'
+```
+
+
+
 #### Failure modes instruction :
 
-- Sometimes the reconstruction is flipped, which break the correspondences. In the easiest case where you meshes are registered in the same orientation, you can just fix this angle in ```reconstruct.py```, to avoid the flipping problem.
+- Sometimes the reconstruction is flipped, which break the correspondences. In the easiest case where you meshes are registered in the same orientation, you can just fix this angle in ```reconstruct.py``` line 86, to avoid the flipping problem. Also note from this line that the angle search only looks in [-90°,+90°].
+
 - Check the presence of lonely outliers that break the Pointnet encoder. You could try to remove them with the ```--clean``` flag.
 
-## Training the autoencoder
+
+#### Last comments
+
+* If you want to use ```inference/correspondences.py``` to process a hole dataset, like FAUST test set, make sure you don't load the same network in memory every time you compute correspondences between two meshes (which will happen with the naive and simplest way of doing it by calling ```inference/correspondences.py``` iteratively on all the pairs). Good luck :-)
+
+## Training the autoencoder TODO
 
 #### Data 
 

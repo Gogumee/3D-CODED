@@ -36,7 +36,6 @@ def scale(input_mesh, mesh_ref):
     mesh_ref : reference mesh path
     output : scaled mesh
     """
-    mesh = pymesh.load_mesh(input)
     area = np.power(mesh_ref.volume / input_mesh.volume, 1.0/3)
     mesh= pymesh.form_mesh( vertices =  input_mesh.vertices * area, faces= input_mesh.faces)
     return mesh
