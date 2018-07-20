@@ -1,6 +1,6 @@
-# Template-Based Correspondences
+# 3D-CODED : 3D Correspondences by Deep Deformation
 
-This repository contains the source codes for the paper [Correspondences](http://imagine.enpc.fr/~groueixt/correspondences/). The task is to put 2 meshes in point-wise correspondence. Below, given 2 humans scans with holes, the reconstruction are in correspondence (suggested by color).
+This repository contains the source codes for the paper [3D-CODED : 3D Correspondences by Deep Deformation](http://imagine.enpc.fr/~groueixt/correspondences/index.html). The task is to put 2 meshes in point-wise correspondence. Below, given 2 humans scans with holes, the reconstruction are in correspondence (suggested by color).
 
 <img src="README/mesh8.ply.gif" style="zoom:80%" /><img src="README/8RecBestRotReg.ply.gif" style="zoom:80%" />
 
@@ -12,15 +12,16 @@ If you find this work useful in your research, please consider citing:
 
 ```
 @inproceedings{groueix2018b,
-          title={{Shape correspondences from learnt template-based parametrization}},
+          title = {3D-CODED : 3D Correspondences by Deep Deformation},
           author={Groueix, Thibault and Fisher, Matthew and Kim, Vladimir G. and Russell, Bryan and Aubry, Mathieu},
-          year={2018}
+          booktitle = {ECCV},
+          year = 2018}
         }
 ```
 
 ## Project Page
 
-The project page is available [http://imagine.enpc.fr/~groueixt/correspondences/](http://imagine.enpc.fr/~groueixt/correspondences/)
+The project page is available [http://imagine.enpc.fr/~groueixt/correspondences/](http://imagine.enpc.fr/~groueixt/correspondences/index.html)
 
 ## Install
 
