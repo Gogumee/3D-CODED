@@ -50,11 +50,12 @@ def regress(points):
     # print("loss reg : ", loss)
     return pointsReconstructed
 
-def run(input):
+def run(input, scalefactor):
     """
     :param input: input mesh to reconstruct optimally.
     :return: final reconstruction after optimisation
     """
+    input, translation = center(input)
     if not global_variables.opt.HR:
         mesh_ref = global_variables.mesh_ref_LR
     else:
@@ -122,7 +123,7 @@ def run(input):
         faces_tosave = global_variables.network.mesh.faces
     
     # create initial guess
-    mesh = pymesh.form_mesh(vertices=bestPoints[0].data.cpu().numpy(), faces=global_variables.network.mesh.faces)
+    mesh = pymesh.form_mesh(vertices=(bestPoints[0].data.cpu().numpy() + translation)/scalefactor, faces=global_variables.network.mesh.faces)
     mesh.add_attribute("red")
     mesh.add_attribute("green")
     mesh.add_attribute("blue")
@@ -150,7 +151,7 @@ def run(input):
     pointsReconstructed1 = torch.matmul(pointsReconstructed1, rot_matrix.transpose(1,0))
     
     # create optimal reconstruction
-    meshReg = pymesh.form_mesh(vertices=pointsReconstructed1[0].data.cpu().numpy(), faces=faces_tosave)
+    meshReg = pymesh.form_mesh(vertices=(pointsReconstructed1[0].data.cpu().numpy()  + translation)/scalefactor, faces=faces_tosave)
     meshReg.add_attribute("red")
     meshReg.add_attribute("green")
     meshReg.add_attribute("blue")
@@ -168,11 +169,12 @@ def reconstruct(input_p):
     :return: None (but save reconstruction)
     """
     input = pymesh.load_mesh(input_p)
+    scalefactor = 1.0
     if global_variables.opt.scale:
-        input = scale(input, global_variables.mesh_ref_LR) #scale input to have the same volume as mesh_ref_LR
+        input, scalefactor = scale(input, global_variables.mesh_ref_LR) #scale input to have the same volume as mesh_ref_LR
     if global_variables.opt.clean:
         input = clean(input) #remove points that doesn't belong to any edges
     test_orientation(input)
-    mesh, meshReg = run(input)
+    mesh, meshReg = run(input, scalefactor)
     pymesh.meshio.save_mesh(input_p[:-4] + "InitialGuess.ply", mesh, "red", "green", "blue", ascii=True)
     pymesh.meshio.save_mesh(input_p[:-4] + "FinalReconstruction.ply", meshReg, "red", "green", "blue", ascii=True)

@@ -70,7 +70,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_points', type=int, default = 6890,  help='number of points fed to poitnet')
     parser.add_argument('--num_angles', type=int, default = 300,  help='number of angle in the search of optimal reconstruction. Set to 1, if you mesh are already facing the cannonical direction as in data/example_1.ply')
     parser.add_argument('--env', type=str, default="CODED", help='visdom environment')
-    parser.add_argument('--clean', type=int, default=0, help='if 1, remove points that dont belong to any edges')
+    parser.add_argument('--clean', type=int, default=1, help='if 1, remove points that dont belong to any edges')
     parser.add_argument('--scale', type=int, default=0, help='if 1, scale input mesh to have same volume as the template')
 
 

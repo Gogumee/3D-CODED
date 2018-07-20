@@ -1,7 +1,7 @@
 import sys
-sys.path.append('/home/thibault/projects/chumpy/')
-sys.path.append('/home/thibault/lib/smpl/')
-sys.path.append('/home/thibault/lib/smpl/smpl_webuser/')
+sys.path.append('./chumpy/')
+sys.path.append('./smpl/')
+sys.path.append('./smpl/smpl_webuser/')
 import pymesh
 import numpy as np
 from smpl_webuser.serialization import load_model
@@ -11,6 +11,9 @@ import cPickle as pickle
 
 
 def generate_surreal(pose, beta, outmesh_path):
+    """
+    This function generation 1 human using a random pose and shape estimation from surreal
+    """
     ## Assign gaussian pose
     m.pose[:] = pose
     m.betas[:] = beta
@@ -33,6 +36,9 @@ def generate_surreal(pose, beta, outmesh_path):
     return
 
 def generate_gaussian(pose, beta, outmesh_path):
+    """
+    This function generation 1 human using a random gaussian pose and shape
+    """
     ## Assign gaussian pose
     m.betas[:] = beta
     m.pose[0:3]=0
@@ -55,6 +61,9 @@ def generate_gaussian(pose, beta, outmesh_path):
     return
 
 def generate_benthuman(pose, beta, outmesh_path):
+    """
+    This function generation 1 human using a random gaussian pose and shape, with random gaussian parameters for specific pose parameters
+    """
     ## Assign random pose parameters except for certain ones to have random bent humans
     m.pose[:] = pose
     m.betas[:] = beta
@@ -236,7 +245,7 @@ def generate_database_benthumans(male):
 
 if __name__ == '__main__':
     ### GENERATE MALE EXAMPLES
-    m = load_model('basicmodel_m_lbs_10_207_0_v1.0.0.pkl')
+    m = load_model('basicModel_m_lbs_10_207_0_v1.0.0.pkl')
     database = np.load('smpl_data.npz')
     generate_database_surreal(male=True)
     generate_database_benthumans(male=True)

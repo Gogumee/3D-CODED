@@ -27,6 +27,18 @@ def clean(input_mesh):
     mesh = pymesh.form_mesh(vertices=unique_points, faces=np.array([[0,0,0]]))
     return mesh
 
+
+def center(input_mesh):
+    """
+    This function center the input mesh using it's bounding box
+    Input : mesh
+    output : centered mesh and translation vector
+    """
+    tranlation = (input_mesh.bbox[0] + input_mesh.bbox[1]) / 2
+    points = input_mesh.vertices - tranlation
+    mesh = pymesh.form_mesh(vertices=points, faces=input_mesh.faces)
+    return mesh, tranlation
+
 def scale(input_mesh, mesh_ref):
     """
     This function scales the input mesh to have the same volume as a reference mesh Intended to be used before a feed forward pass in pointNet
@@ -36,7 +48,7 @@ def scale(input_mesh, mesh_ref):
     """
     area = np.power(mesh_ref.volume / input_mesh.volume, 1.0/3)
     mesh= pymesh.form_mesh( vertices =  input_mesh.vertices * area, faces= input_mesh.faces)
-    return mesh
+    return mesh, area
 
 def rot(input_mesh,  theta = np.pi/2):
     # rotation around X axis of angle theta
