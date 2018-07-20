@@ -137,7 +137,7 @@ You need to make sure your meshes are preprocessed correctly :
 
 #### Data 
 
-- TODO
+The dataset can't be shared because of copyrights issues. Since the generation process of the dataset is quite heavy, it has it's own README in ```data/README.md```. Brace yourselve :-)
 
 #### Options
 
