@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import pdb
 import torch.nn.functional as F
 import pymesh
+
 #UTILITIES
 class STN3d(nn.Module):
     def __init__(self, num_points = 2500):
@@ -25,7 +26,6 @@ class STN3d(nn.Module):
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
         self.conv3 = torch.nn.Conv1d(128, 1024, 1)
-        #self.mp1 = torch.nn.MaxPool1d(num_points)
         self.fc1 = nn.Linear(1024, 512)
         self.fc2 = nn.Linear(512, 256)
         self.fc3 = nn.Linear(256, 9)
@@ -36,10 +36,7 @@ class STN3d(nn.Module):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
-        #x = self.mp1(x)
-        #print(x.size())
         x,_ = torch.max(x, 2)
-        #print(x.size())
         x = x.view(-1, 1024)
 
         x = F.relu(self.fc1(x))
@@ -68,7 +65,6 @@ class PointNetfeat(nn.Module):
         self.trans = trans
 
 
-        #self.mp1 = torch.nn.MaxPool1d(num_points)
         self.num_points = num_points
         self.global_feat = global_feat
     def forward(self, x):
@@ -129,20 +125,16 @@ class AE_AtlasNet_Humans(nn.Module):
         nn.ReLU()
         )
         self.decoder = nn.ModuleList([PointGenCon(bottleneck_size = 3 +self.bottleneck_size) for i in range(0,self.nb_primitives)])
-        # mesh = pymesh.load_mesh("/home/thibault/lib/smpl/smpl_webuser/hello_world/search/template0.ply")
 
-        mesh = pymesh.load_mesh("/home/thibault/Downloads/MPI-FAUST/training/registrations/tr_reg_000.ply")
+        mesh = pymesh.load_mesh("./data/template/template.ply")
         self.mesh = mesh
-        mesh_HR = pymesh.load_mesh("/home/thibault/Downloads/MPI-FAUST/training/registrations/tr_reg_000_dense.ply")
+        mesh_HR = pymesh.load_mesh("./data/template/template_dense.ply")
         self.mesh_HR = mesh_HR
-        # mesh = pymesh.load_mesh("/home/thibault/Downloads/MPI-FAUST/training/ref/tr_reg_000.ply")
         point_set = mesh.vertices
         point_set = point_set - (mesh.bbox[0] + mesh.bbox[1]) / 2
         point_set_HR = mesh_HR.vertices
         point_set_HR = point_set_HR - (mesh_HR.bbox[0] + mesh_HR.bbox[1]) / 2
-        # print(np.shape(centroid))
-        # print(np.shape(mesh_HR.vertices))
-        # point_set = mesh.vertices[:, 0:3] - centroid
+
         self.vertex = torch.from_numpy(point_set).cuda().float()
         self.vertex_HR = torch.from_numpy(point_set_HR).cuda().float()
         self.num_vertex = self.vertex.size(0)
@@ -154,13 +146,7 @@ class AE_AtlasNet_Humans(nn.Module):
         for i in range(0,self.nb_primitives):
             idx = np.random.randint(self.num_vertex, size= x.size(0) * self.num_points)
             rand_grid = self.vertex[idx, : ].view(x.size(0), self.num_points, 3).transpose(1,2).contiguous()
-            # import visdom
-            # vis = visdom.Visdom(port=8888)
-            # vis.scatter(self.vertex.cpu())
-            # vis.scatter(rand_grid[0].transpose(1,0).contiguous().cpu())
-            # rand_grid[0,0,0,0,0]
             rand_grid = Variable(rand_grid)
-            #assert a number of things like norm/visdom... then copy to other functions
             y = x.unsqueeze(2).expand(x.size(0),x.size(1), rand_grid.size(2)).contiguous()
             y = torch.cat( (rand_grid, y), 1).contiguous()
             outs.append(self.decoder[i](y))
@@ -215,13 +201,7 @@ class AE_AtlasNet_Humans(nn.Module):
             idx = idx.numpy().astype(np.int)
             rand_grid = self.vertex[idx,:]
             rand_grid = rand_grid.view(x.size(0), -1, 3).transpose(1,2).contiguous()
-            # import visdom
-            # vis = visdom.Visdom(port=8888)
-            # vis.scatter(self.vertex.cpu())
-            # vis.scatter(rand_grid[0].transpose(1,0).contiguous().cpu())
-            # rand_grid[0,0,0,0,0]
             rand_grid = Variable(rand_grid)
-            #assert a number of things like norm/visdom... then copy to other functions
             y = x.unsqueeze(2).expand(x.size(0),x.size(1), rand_grid.size(2)).contiguous()
             y = torch.cat( (rand_grid, y), 1).contiguous()
             outs.append(self.decoder[i](y))
@@ -259,22 +239,19 @@ class AE_AtlasNet_Animal(nn.Module):
         nn.ReLU()
         )
         self.decoder = nn.ModuleList([PointGenCon(bottleneck_size = 3 +self.bottleneck_size) for i in range(0,self.nb_primitives)])
-        # mesh = pymesh.load_mesh("/home/thibault/lib/smpl/smpl_webuser/hello_world/search/template0.ply")
 
-        mesh = pymesh.load_mesh("/home/thibault/Dropbox/ECCV/animals/smal_online_V1.0/family_4.ply")
+        mesh = pymesh.load_mesh("./data/template/template_hyppo.ply")
         self.mesh = mesh
-        mesh_HR = pymesh.load_mesh("/home/thibault/Dropbox/ECCV/animals/smal_online_V1.0/family_4.ply")
+        mesh_HR = pymesh.load_mesh("./data/template/template_hyppo.ply")
         self.mesh_HR = mesh_HR
-        # mesh = pymesh.load_mesh("/home/thibault/Downloads/MPI-FAUST/training/ref/tr_reg_000.ply")
+
         point_set = mesh.vertices
         point_set = point_set - (mesh.bbox[0] + mesh.bbox[1]) / 2
         point_set_HR = mesh_HR.vertices
         point_set_HR = point_set_HR - (mesh_HR.bbox[0] + mesh_HR.bbox[1]) / 2
-        # print(np.shape(centroid))
         print(np.shape(mesh.vertices))
         print(np.shape(mesh_HR.vertices))
-        # print(np.shape(mesh_HR.vertices))
-        # point_set = mesh.vertices[:, 0:3] - centroid
+
         self.vertex = torch.from_numpy(point_set).cuda().float()
         self.vertex_HR = torch.from_numpy(point_set_HR).cuda().float()
         self.num_vertex = self.vertex.size(0)
@@ -288,13 +265,7 @@ class AE_AtlasNet_Animal(nn.Module):
         for i in range(0,self.nb_primitives):
             idx = np.random.randint(self.num_vertex, size= x.size(0) * self.num_points)
             rand_grid = self.vertex[idx, : ].view(x.size(0), self.num_points, 3).transpose(1,2).contiguous()
-            # import visdom
-            # vis = visdom.Visdom(port=8888)
-            # vis.scatter(self.vertex.cpu())
-            # vis.scatter(rand_grid[0].transpose(1,0).contiguous().cpu())
-            # rand_grid[0,0,0,0,0]
             rand_grid = Variable(rand_grid)
-            #assert a number of things like norm/visdom... then copy to other functions
             y = x.unsqueeze(2).expand(x.size(0),x.size(1), rand_grid.size(2)).contiguous()
             y = torch.cat( (rand_grid, y), 1).contiguous()
             outs.append(self.decoder[i](y))
@@ -349,13 +320,7 @@ class AE_AtlasNet_Animal(nn.Module):
             idx = idx.numpy().astype(np.int)
             rand_grid = self.vertex[idx,:]
             rand_grid = rand_grid.view(x.size(0), -1, 3).transpose(1,2).contiguous()
-            # import visdom
-            # vis = visdom.Visdom(port=8888)
-            # vis.scatter(self.vertex.cpu())
-            # vis.scatter(rand_grid[0].transpose(1,0).contiguous().cpu())
-            # rand_grid[0,0,0,0,0]
             rand_grid = Variable(rand_grid)
-            #assert a number of things like norm/visdom... then copy to other functions
             y = x.unsqueeze(2).expand(x.size(0),x.size(1), rand_grid.size(2)).contiguous()
             y = torch.cat( (rand_grid, y), 1).contiguous()
             outs.append(self.decoder[i](y))
@@ -367,14 +332,12 @@ class AE_AtlasNet_Animal(nn.Module):
 
         rand_grid = self.vertex[:int(self.num_vertex/2)].view(x.size(0), int(self.num_vertex/2), 3).transpose(1,2).contiguous()
         rand_grid = Variable(rand_grid)
-        # print(grid.sizegrid())
         y = x.unsqueeze(2).expand(x.size(0),x.size(1), rand_grid.size(2)).contiguous()
         y = torch.cat( (rand_grid, y), 1).contiguous()
         outs.append(self.decoder[0](y))
         torch.cuda.synchronize()
         rand_grid = self.vertex[int(self.num_vertex/2):].view(x.size(0), self.num_vertex  - int(self.num_vertex/2), 3).transpose(1,2).contiguous()
         rand_grid = Variable(rand_grid)
-        # print(grid.sizegrid())
         y = x.unsqueeze(2).expand(x.size(0),x.size(1), rand_grid.size(2)).contiguous()
         y = torch.cat( (rand_grid, y), 1).contiguous()
         outs.append(self.decoder[0](y))
