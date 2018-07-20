@@ -83,7 +83,7 @@ python test.py
 
 The trained models and some corresponding results are also available online :
 
-- [The trained_models](https://cloud.enpc.fr/s/TODO) go in ``` trained_models/```
+- [The trained_models](https://cloud.enpc.fr/s/n4L7jqD486V8IJn) go in ``` trained_models/```
 
 #### On the demo meshes
 
