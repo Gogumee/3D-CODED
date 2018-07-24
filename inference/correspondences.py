@@ -8,7 +8,7 @@ import torch.backends.cudnn as cudnn
 import torch.utils.data
 import sys
 sys.path.append('./auxiliary/')
-from datasetFaust import *
+# from datasetFaust import *
 from model import *
 from utils import *
 from ply import *
