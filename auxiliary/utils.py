@@ -8,7 +8,9 @@ def test_orientation(input_mesh):
     input mesh
     output : boolean or warning
     """
-    extent = input_mesh.extents
+    point_set = input_mesh.vertices
+    bbox = np.array([[np.max(point_set[:,0]), np.max(point_set[:,1]), np.max(point_set[:,2])], [np.min(point_set[:,0]), np.min(point_set[:,1]), np.min(point_set[:,2])]])
+    extent = bbox[0] - bbox[1]
     print(extent)
     if not np.argmax(np.abs(extent)) == 1:
         print("The widest axis is not the Y axis, you should make sure the mesh is aligned on the Y axis for the autoencoder to work (check out the example in /data)")
