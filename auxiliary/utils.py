@@ -1,6 +1,6 @@
 import random
 import numpy as np
-import pymesh
+import trimesh
 
 def test_orientation(input_mesh):
     """
@@ -8,8 +8,8 @@ def test_orientation(input_mesh):
     input mesh
     output : boolean or warning
     """
-    bbox = input_mesh.bbox
-    if not np.argmax(np.abs(bbox[1] - bbox[0])) == 1:
+    extent = input_mesh.extent
+    if not np.argmax(np.abs(extent)) == 1:
         print("The widest axis is not the Y axis, you should make sure the mesh is aligned on the Y axis for the autoencoder to work (check out the example in /data)")
     return 
 
@@ -24,7 +24,7 @@ def clean(input_mesh):
     faces = faces.reshape(-1)
     unique_points_index = np.unique(faces)
     unique_points = pts[unique_points_index]
-    mesh = pymesh.form_mesh(vertices=unique_points, faces=np.array([[0,0,0]]))
+    mesh = trimesh.Trimesh(vertices=unique_points, faces=np.array([[0,0,0]]), process=False)
     return mesh
 
 
@@ -34,9 +34,11 @@ def center(input_mesh):
     Input : mesh
     output : centered mesh and translation vector
     """
-    tranlation = (input_mesh.bbox[0] + input_mesh.bbox[1]) / 2
+    bbox = np.array([[np.max(input_mesh.vertices[:,0]), np.max(input_mesh.vertices[:,1]), np.max(input_mesh.vertices[:,2])], [np.min(input_mesh.vertices[:,0]), np.min(input_mesh.vertices[:,1]), np.min(input_mesh.vertices[:,2])]])
+
+    tranlation = (bbox[0] + bbox[1]) / 2
     points = input_mesh.vertices - tranlation
-    mesh = pymesh.form_mesh(vertices=points, faces=input_mesh.faces)
+    mesh = trimesh.Trimesh(vertices=points, faces=input_mesh.faces, process= False)
     return mesh, tranlation
 
 def scale(input_mesh, mesh_ref):
@@ -47,7 +49,7 @@ def scale(input_mesh, mesh_ref):
     output : scaled mesh
     """
     area = np.power(mesh_ref.volume / input_mesh.volume, 1.0/3)
-    mesh= pymesh.form_mesh( vertices =  input_mesh.vertices * area, faces= input_mesh.faces)
+    mesh= trimesh.Trimesh( vertices =  input_mesh.vertices * area, faces= input_mesh.faces, process = False)
     return mesh, area
 
 def rot(input_mesh,  theta = np.pi/2):
@@ -56,9 +58,12 @@ def rot(input_mesh,  theta = np.pi/2):
     rot_matrix = np.array([[1,0,0],[0,np.cos(theta),-np.sin(theta)],[0,np.sin(theta),np.cos(theta)]])
     point_set = point.dot(np.transpose(rot_matrix, (1, 0)))
     #center the rotated mesh
-    point_set = point_set - (input_mesh.bbox[0] + input_mesh.bbox[1]) / 2
+    bbox = np.array([[np.max(point_set[:,0]), np.max(point_set[:,1]), np.max(point_set[:,2])], [np.min(point_set[:,0]), np.min(point_set[:,1]), np.min(point_set[:,2])]])
 
-    mesh = pymesh.form_mesh(vertices=point_set, faces=input_mesh.faces)
+    tranlation = (bbox[0] + bbox[1]) / 2
+    point_set = point_set - tranlation
+
+    mesh = trimesh.Trimesh(vertices=point_set, faces=input_mesh.faces, process = False)
     return mesh
 
 

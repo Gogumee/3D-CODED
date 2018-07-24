@@ -7,7 +7,6 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.utils.data
 import sys
-import pymesh
 sys.path.append('./auxiliary/')
 from datasetFaust import *
 from model import *
@@ -20,7 +19,7 @@ sys.path.append("./nndistance/")
 from modules.nnd import NNDModule
 import visdom
 import global_variables
-
+import trimesh
 
 
 def compute_correspondances(source_p, source_reconstructed_p, target_p, target_reconstructed_p):
@@ -34,10 +33,10 @@ def compute_correspondances(source_p, source_reconstructed_p, target_p, target_r
     """
     # inputs are all filepaths
     with torch.no_grad():
-        source = pymesh.load_mesh(source_p)
-        source_reconstructed = pymesh.load_mesh(source_reconstructed_p)
-        target = pymesh.load_mesh(target_p)
-        target_reconstructed = pymesh.load_mesh(target_reconstructed_p)
+        source = trimesh.load(source_p, process=False)
+        source_reconstructed = trimesh.load(source_reconstructed_p, process=False)
+        target = trimesh.load(target_p, process=False)
+        target_reconstructed = trimesh.load(target_reconstructed_p, process=False)
 
         # project on source_reconstructed
         neigh.fit(source_reconstructed.vertices)
@@ -54,8 +53,8 @@ def compute_correspondances(source_p, source_reconstructed_p, target_p, target_r
         # closest_points = np.mean(closest_points, 1, keepdims=False)
 
         # save output
-        mesh = pymesh.form_mesh(vertices=closest_points, faces=source.faces)
-        pymesh.meshio.save_mesh("results/correspondences.ply", mesh, ascii=True)
+        mesh = trimesh.Trimesh(vertices=closest_points, faces=source.faces, process=False)
+        trimesh.io.export.export_mesh(mesh, "results/correspondences.ply")
         np.savetxt("results/correspondences.txt", closest_points, fmt='%1.10f')
         return
 

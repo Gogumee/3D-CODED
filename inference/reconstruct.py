@@ -12,7 +12,7 @@ sys.path.append("./nndistance/")
 from modules.nnd import NNDModule
 distChamfer = NNDModule()
 import global_variables
-
+import trimesh
 val_loss = AverageValueMeter()
 
 
@@ -91,11 +91,14 @@ def run(input, scalefactor):
         rot_matrix = np.array([[np.cos(theta), 0, np.sin(theta)], [0, 1, 0], [- np.sin(theta), 0,  np.cos(theta)]])
         rot_matrix = Variable(torch.from_numpy(rot_matrix).float()).cuda()
         points2 = torch.matmul(rot_matrix, points_LR)
-        mesh_tmp = pymesh.form_mesh(vertices=points2[0].transpose(1,0).data.cpu().numpy(), faces=global_variables.network.mesh.faces)
-        norma = Variable(torch.from_numpy((mesh_tmp.bbox[0] + mesh_tmp.bbox[1]) / 2).float().cuda())
+        mesh_tmp = trimesh.Trimesh(process=False, use_embree=False,vertices=points2[0].transpose(1,0).data.cpu().numpy(), faces=global_variables.network.mesh.faces)
+        #bbox
+        bbox = np.array([[np.max(mesh_tmp.vertices[:,0]), np.max(mesh_tmp.vertices[:,1]), np.max(mesh_tmp.vertices[:,2])], [np.min(mesh_tmp.vertices[:,0]), np.min(mesh_tmp.vertices[:,1]), np.min(mesh_tmp.vertices[:,2])]])
+        norma = Variable(torch.from_numpy((bbox[0] + bbox[1]) / 2).float().cuda())
+
         norma2 = norma.unsqueeze(1).expand(3,points2.size(2)).contiguous()
         points2[0] = points2[0] - norma2
-        mesh_tmp = pymesh.form_mesh(vertices=points2[0].transpose(1,0).data.cpu().numpy(), faces=np.array([[0,0,0]]))
+        mesh_tmp = trimesh.Trimesh(process=False, use_embree=False,vertices=points2[0].transpose(1,0).data.cpu().numpy(), faces=np.array([[0,0,0]]))
 
         # reconstruct rotated mesh
         pointsReconstructed = global_variables.network(points2)
@@ -123,13 +126,8 @@ def run(input, scalefactor):
         faces_tosave = global_variables.network.mesh.faces
     
     # create initial guess
-    mesh = pymesh.form_mesh(vertices=(bestPoints[0].data.cpu().numpy() + translation)/scalefactor, faces=global_variables.network.mesh.faces)
-    mesh.add_attribute("red")
-    mesh.add_attribute("green")
-    mesh.add_attribute("blue")
-    mesh.set_attribute("red", global_variables.mesh_ref_LR.get_attribute("vertex_red"))
-    mesh.set_attribute("green", global_variables.mesh_ref_LR.get_attribute("vertex_green"))
-    mesh.set_attribute("blue", global_variables.mesh_ref_LR.get_attribute("vertex_blue"))
+    mesh = trimesh.Trimesh(vertices=(bestPoints[0].data.cpu().numpy() + translation)/scalefactor, faces=global_variables.network.mesh.faces, process = False)
+
 
     #START REGRESSION
     print("start regression...")
@@ -138,8 +136,9 @@ def run(input, scalefactor):
     rot_matrix = np.array([[np.cos(best_theta), 0, np.sin(best_theta)], [0, 1, 0], [- np.sin(best_theta), 0,  np.cos(best_theta)]])
     rot_matrix = Variable(torch.from_numpy(rot_matrix).float()).cuda()
     points2 = torch.matmul(rot_matrix, points)
-    mesh_tmp = pymesh.form_mesh(vertices=points2[0].transpose(1,0).data.cpu().numpy(), faces=global_variables.network.mesh.faces)
-    norma = Variable(torch.from_numpy((mesh_tmp.bbox[0] + mesh_tmp.bbox[1]) / 2).float().cuda())
+    mesh_tmp = trimesh.Trimesh(vertices=points2[0].transpose(1,0).data.cpu().numpy(), faces=global_variables.network.mesh.faces)
+    bbox = np.array([[np.max(mesh_tmp.vertices[:,0]), np.max(mesh_tmp.vertices[:,1]), np.max(mesh_tmp.vertices[:,2])], [np.min(mesh_tmp.vertices[:,0]), np.min(mesh_tmp.vertices[:,1]), np.min(mesh_tmp.vertices[:,2])]])
+    norma = Variable(torch.from_numpy((bbox[0] + bbox[1]) / 2).float().cuda())
     norma2 = norma.unsqueeze(1).expand(3,points2.size(2)).contiguous()
     points2[0] = points2[0] - norma2
     pointsReconstructed1 = regress(points2)
@@ -151,24 +150,36 @@ def run(input, scalefactor):
     pointsReconstructed1 = torch.matmul(pointsReconstructed1, rot_matrix.transpose(1,0))
     
     # create optimal reconstruction
-    meshReg = pymesh.form_mesh(vertices=(pointsReconstructed1[0].data.cpu().numpy()  + translation)/scalefactor, faces=faces_tosave)
-    meshReg.add_attribute("red")
-    meshReg.add_attribute("green")
-    meshReg.add_attribute("blue")
-    meshReg.set_attribute("red", mesh_ref.get_attribute("vertex_red"))
-    meshReg.set_attribute("green", mesh_ref.get_attribute("vertex_green"))
-    meshReg.set_attribute("blue", mesh_ref.get_attribute("vertex_blue"))
+    meshReg = trimesh.Trimesh(vertices=(pointsReconstructed1[0].data.cpu().numpy()  + translation)/scalefactor, faces=faces_tosave, process=False)
+
     print("... Done!")
     return mesh, meshReg
 
-
+def save(mesh, mesh_color, path):
+    """
+    Home-made function to save a ply file with colors. A bit hacky
+    """
+    to_write = mesh.vertices
+    b = np.zeros((len(mesh.faces),4)) + 3
+    b[:,1:] = np.array(mesh.faces)
+    points2write = pd.DataFrame({
+        'lst0Tite': to_write[:,0],
+        'lst1Tite': to_write[:,1],
+        'lst2Tite': to_write[:,2],
+        'lst3Tite': mesh_color.get_attribute("vertex_red").astype("uint8"),
+        'lst4Tite': mesh_color.get_attribute("vertex_green").astype("uint8"),
+        'lst5Tite': mesh_color.get_attribute("vertex_blue").astype("uint8"),
+        })
+    # print(points2write)
+    # print('writing ply')
+    write_ply(filename=path, points=points2write, as_text=True, text=False, faces = pd.DataFrame(b.astype(int)), color = True)    
 def reconstruct(input_p):
     """
     Recontruct a 3D shape by deforming a template
     :param input_p: input path
     :return: None (but save reconstruction)
     """
-    input = pymesh.load_mesh(input_p)
+    input = trimesh.load(input_p, process=False)
     scalefactor = 1.0
     if global_variables.opt.scale:
         input, scalefactor = scale(input, global_variables.mesh_ref_LR) #scale input to have the same volume as mesh_ref_LR
@@ -176,5 +187,12 @@ def reconstruct(input_p):
         input = clean(input) #remove points that doesn't belong to any edges
     test_orientation(input)
     mesh, meshReg = run(input, scalefactor)
-    pymesh.meshio.save_mesh(input_p[:-4] + "InitialGuess.ply", mesh, "red", "green", "blue", ascii=True)
-    pymesh.meshio.save_mesh(input_p[:-4] + "FinalReconstruction.ply", meshReg, "red", "green", "blue", ascii=True)
+
+    if not global_variables.opt.HR:
+        mesh_ref = global_variables.mesh_ref_LR
+    else:
+        mesh_ref = global_variables.mesh_ref
+    save(mesh, global_variables.mesh_ref_LR, input_p[:-4] + "InitialGuess.ply")
+    save(meshReg, mesh_ref, input_p[:-4] + "FinalReconstruction.ply")
+    # Save optimal reconstruction
+   

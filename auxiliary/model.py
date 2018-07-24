@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pdb
 import torch.nn.functional as F
-import pymesh
+import trimesh
 
 #UTILITIES
 class STN3d(nn.Module):
@@ -126,9 +126,9 @@ class AE_AtlasNet_Humans(nn.Module):
         )
         self.decoder = nn.ModuleList([PointGenCon(bottleneck_size = 3 +self.bottleneck_size) for i in range(0,self.nb_primitives)])
 
-        mesh = pymesh.load_mesh("./data/template/template.ply")
+        mesh = trimesh.load("./data/template/template.ply", process=False)
         self.mesh = mesh
-        mesh_HR = pymesh.load_mesh("./data/template/template_dense.ply")
+        mesh_HR = trimesh.load("./data/template/template_dense.ply", process=False)
         self.mesh_HR = mesh_HR
         point_set = mesh.vertices
         point_set = point_set - (mesh.bbox[0] + mesh.bbox[1]) / 2
@@ -240,9 +240,9 @@ class AE_AtlasNet_Animal(nn.Module):
         )
         self.decoder = nn.ModuleList([PointGenCon(bottleneck_size = 3 +self.bottleneck_size) for i in range(0,self.nb_primitives)])
 
-        mesh = pymesh.load_mesh("./data/template/template_hyppo.ply")
+        mesh = trimesh.load("./data/template/template_hyppo.ply", process=False)
         self.mesh = mesh
-        mesh_HR = pymesh.load_mesh("./data/template/template_hyppo.ply")
+        mesh_HR = trimesh.load("./data/template/template_hyppo.ply", process=False)
         self.mesh_HR = mesh_HR
 
         point_set = mesh.vertices
