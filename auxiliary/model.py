@@ -131,9 +131,13 @@ class AE_AtlasNet_Humans(nn.Module):
         mesh_HR = trimesh.load("./data/template/template_dense.ply", process=False)
         self.mesh_HR = mesh_HR
         point_set = mesh.vertices
-        point_set = point_set - (mesh.bbox[0] + mesh.bbox[1]) / 2
+        bbox = np.array([[np.max(point_set[:,0]), np.max(point_set[:,1]), np.max(point_set[:,2])], [np.min(point_set[:,0]), np.min(point_set[:,1]), np.min(point_set[:,2])]])
+        tranlation = (bbox[0] + bbox[1]) / 2
+        point_set = point_set - tranlation
         point_set_HR = mesh_HR.vertices
-        point_set_HR = point_set_HR - (mesh_HR.bbox[0] + mesh_HR.bbox[1]) / 2
+        bbox = np.array([[np.max(point_set_HR[:,0]), np.max(point_set_HR[:,1]), np.max(point_set_HR[:,2])], [np.min(point_set_HR[:,0]), np.min(point_set_HR[:,1]), np.min(point_set_HR[:,2])]])
+        tranlation = (bbox[0] + bbox[1]) / 2
+        point_set_HR = point_set_HR - tranlation
 
         self.vertex = torch.from_numpy(point_set).cuda().float()
         self.vertex_HR = torch.from_numpy(point_set_HR).cuda().float()
@@ -246,9 +250,13 @@ class AE_AtlasNet_Animal(nn.Module):
         self.mesh_HR = mesh_HR
 
         point_set = mesh.vertices
-        point_set = point_set - (mesh.bbox[0] + mesh.bbox[1]) / 2
+        bbox = np.array([[np.max(point_set[:,0]), np.max(point_set[:,1]), np.max(point_set[:,2])], [np.min(point_set[:,0]), np.min(point_set[:,1]), np.min(point_set[:,2])]])
+        tranlation = (bbox[0] + bbox[1]) / 2
+        point_set = point_set - tranlation
         point_set_HR = mesh_HR.vertices
-        point_set_HR = point_set_HR - (mesh_HR.bbox[0] + mesh_HR.bbox[1]) / 2
+        bbox = np.array([[np.max(point_set_HR[:,0]), np.max(point_set_HR[:,1]), np.max(point_set_HR[:,2])], [np.min(point_set_HR[:,0]), np.min(point_set_HR[:,1]), np.min(point_set_HR[:,2])]])
+        tranlation = (bbox[0] + bbox[1]) / 2
+        point_set_HR = point_set_HR - tranlation
         print(np.shape(mesh.vertices))
         print(np.shape(mesh_HR.vertices))
 
