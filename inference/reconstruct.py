@@ -202,7 +202,8 @@ def reconstruct(input_p):
         red = global_variables.red_HR
         green = global_variables.green_HR
         mesh_ref = global_variables.mesh_ref
-    save(mesh, global_variables.mesh_ref_LR, input_p[:-4] + "InitialGuess.ply", red, green, blue )
+
+    save(mesh, global_variables.mesh_ref_LR, input_p[:-4] + "InitialGuess.ply", global_variables.red_LR, global_variables.green_LR, global_variables.blue_LR )
     save(meshReg, mesh_ref, input_p[:-4] + "FinalReconstruction.ply",  red, green, blue)
     # Save optimal reconstruction
    
