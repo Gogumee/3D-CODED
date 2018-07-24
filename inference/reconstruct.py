@@ -155,7 +155,7 @@ def run(input, scalefactor):
     print("... Done!")
     return mesh, meshReg
 
-def save(mesh, mesh_color, path):
+def save(mesh, mesh_color, path, red, green, blue):
     """
     Home-made function to save a ply file with colors. A bit hacky
     """
@@ -166,9 +166,9 @@ def save(mesh, mesh_color, path):
         'lst0Tite': to_write[:,0],
         'lst1Tite': to_write[:,1],
         'lst2Tite': to_write[:,2],
-        'lst3Tite': mesh_color.get_attribute("vertex_red").astype("uint8"),
-        'lst4Tite': mesh_color.get_attribute("vertex_green").astype("uint8"),
-        'lst5Tite': mesh_color.get_attribute("vertex_blue").astype("uint8"),
+        'lst3Tite': red,
+        'lst4Tite': green,
+        'lst5Tite': blue,
         })
     # print(points2write)
     # print('writing ply')
@@ -190,9 +190,15 @@ def reconstruct(input_p):
 
     if not global_variables.opt.HR:
         mesh_ref = global_variables.mesh_ref_LR
+        red = global_variables.red_HR
+        green = global_variables.green_HR
+        blue = global_variables.blue_HR
     else:
         mesh_ref = global_variables.mesh_ref
-    save(mesh, global_variables.mesh_ref_LR, input_p[:-4] + "InitialGuess.ply")
-    save(meshReg, mesh_ref, input_p[:-4] + "FinalReconstruction.ply")
+        red = global_variables.red_LR
+        green = global_variables.green_LR
+        blue = global_variables.blue_LR
+    save(mesh, global_variables.mesh_ref_LR, input_p[:-4] + "InitialGuess.ply", red, green, blue )
+    save(meshReg, mesh_ref, input_p[:-4] + "FinalReconstruction.ply",  red, green, blue)
     # Save optimal reconstruction
    
