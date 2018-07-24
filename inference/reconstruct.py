@@ -189,15 +189,15 @@ def reconstruct(input_p):
     mesh, meshReg = run(input, scalefactor)
 
     if not global_variables.opt.HR:
-        mesh_ref = global_variables.mesh_ref_LR
-        red = global_variables.red_HR
-        green = global_variables.green_HR
-        blue = global_variables.blue_HR
-    else:
-        mesh_ref = global_variables.mesh_ref
         red = global_variables.red_LR
         green = global_variables.green_LR
         blue = global_variables.blue_LR
+        mesh_ref = global_variables.mesh_ref_LR
+    else:
+        blue = global_variables.blue_HR
+        red = global_variables.red_HR
+        green = global_variables.green_HR
+        mesh_ref = global_variables.mesh_ref
     save(mesh, global_variables.mesh_ref_LR, input_p[:-4] + "InitialGuess.ply", red, green, blue )
     save(meshReg, mesh_ref, input_p[:-4] + "FinalReconstruction.ply",  red, green, blue)
     # Save optimal reconstruction
