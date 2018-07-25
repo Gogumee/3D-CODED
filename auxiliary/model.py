@@ -131,9 +131,11 @@ class AE_AtlasNet_Humans(nn.Module):
         mesh_HR = trimesh.load("./data/template/template_dense.ply", process=False)
         self.mesh_HR = mesh_HR
         point_set = mesh.vertices
+
         bbox = np.array([[np.max(point_set[:,0]), np.max(point_set[:,1]), np.max(point_set[:,2])], [np.min(point_set[:,0]), np.min(point_set[:,1]), np.min(point_set[:,2])]])
         tranlation = (bbox[0] + bbox[1]) / 2
         point_set = point_set - tranlation
+
         point_set_HR = mesh_HR.vertices
         bbox = np.array([[np.max(point_set_HR[:,0]), np.max(point_set_HR[:,1]), np.max(point_set_HR[:,2])], [np.min(point_set_HR[:,0]), np.min(point_set_HR[:,1]), np.min(point_set_HR[:,2])]])
         tranlation = (bbox[0] + bbox[1]) / 2
@@ -166,6 +168,7 @@ class AE_AtlasNet_Humans(nn.Module):
             y = torch.cat( (rand_grid, y), 1).contiguous()
             outs.append(self.decoder[i](y))
         return torch.cat(outs,2).contiguous().transpose(2,1).contiguous()
+
     def decode(self, x):
         outs = []
         for i in range(0,self.nb_primitives):

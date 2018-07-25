@@ -55,6 +55,7 @@ def run(input, scalefactor):
     :param input: input mesh to reconstruct optimally.
     :return: final reconstruction after optimisation
     """
+
     input, translation = center(input)
     if not global_variables.opt.HR:
         mesh_ref = global_variables.mesh_ref_LR
@@ -64,6 +65,7 @@ def run(input, scalefactor):
     ## Extract points and put them on GPU
     points = input.vertices
     random_sample = np.random.choice(np.shape(points)[0], size=10000)
+
     points = torch.from_numpy(points.astype(np.float32)).contiguous().unsqueeze(0)
     points = Variable(points)
     points = points.transpose(2, 1).contiguous()
@@ -77,12 +79,10 @@ def run(input, scalefactor):
 
     theta = 0
     bestLoss = 10
-    # print("size: ", points_LR.size())
     pointsReconstructed = global_variables.network(points_LR)
     dist1, dist2 = distChamfer(points_LR.transpose(2, 1).contiguous(), pointsReconstructed)
     loss_net = (torch.mean(dist1)) + (torch.mean(dist2))
     # print("loss : ",  loss_net.data[0], 0)
-
     # ---- Search best angle for best reconstruction on the Y axis---
     for theta in np.linspace(-np.pi/2, np.pi/2, global_variables.opt.num_angles):
         if global_variables.opt.num_angles == 1:
