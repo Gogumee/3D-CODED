@@ -197,7 +197,7 @@ python ./training/train_sup.py --env $env  |& tee ${env}.txt
 
 * Monitor your training on http://localhost:8888/
 
-![visdom](/home/thibault/projects/3D-CODED/README/1532524819586.png)
+![visdom](./README/1532524819586.png)
 
 
 
