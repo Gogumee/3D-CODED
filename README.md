@@ -134,6 +134,8 @@ You need to make sure your meshes are preprocessed correctly :
 '--env', type=str, default="CODED", help='visdom environment'
 '--clean', type=int, default=0, help='if 1, remove points that dont belong to any edges'
 '--scale', type=int, default=0, help='if 1, scale input mesh to have same volume as the template'
+'--project_on_target', type=int, default=0, help='if 1, projects predicted correspondences point on target mesh'
+
 ```
 
 

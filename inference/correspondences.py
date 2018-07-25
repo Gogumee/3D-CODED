@@ -46,11 +46,14 @@ def compute_correspondances(source_p, source_reconstructed_p, target_p, target_r
         closest_points = target_reconstructed.vertices[idx_knn]
         closest_points = np.mean(closest_points, 1, keepdims=False)
 
+
         # project on target
-        # neigh.fit(target.vertices)
-        # idx_knn = neigh.kneighbors(closest_points, return_distance=False)
-        # closest_points = target.vertices[idx_knn]
-        # closest_points = np.mean(closest_points, 1, keepdims=False)
+        if global_variables.opt.project_on_target:
+            print("projection on target...")
+            neigh.fit(target.vertices)
+            idx_knn = neigh.kneighbors(closest_points, return_distance=False)
+            closest_points = target.vertices[idx_knn]
+            closest_points = np.mean(closest_points, 1, keepdims=False)
 
         # save output
         mesh = trimesh.Trimesh(vertices=closest_points, faces=source.faces, process=False)
@@ -71,6 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('--env', type=str, default="CODED", help='visdom environment')
     parser.add_argument('--clean', type=int, default=1, help='if 1, remove points that dont belong to any edges')
     parser.add_argument('--scale', type=int, default=0, help='if 1, scale input mesh to have same volume as the template')
+    parser.add_argument('--project_on_target', type=int, default=0, help='if 1, projects predicted correspondences point on target mesh')
 
 
     opt = parser.parse_args()

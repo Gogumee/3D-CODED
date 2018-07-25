@@ -21,11 +21,14 @@ def clean(input_mesh):
     Input : mesh
     output : cleaned mesh
     """
+    print("cleaning ...")
+    print("number of point before : " , np.shape(input_mesh.vertices)[0])
     pts = input_mesh.vertices
     faces = input_mesh.faces
     faces = faces.reshape(-1)
     unique_points_index = np.unique(faces)
     unique_points = pts[unique_points_index]
+    print("number of point after : " , np.shape(unique_points)[0])
     mesh = trimesh.Trimesh(vertices=unique_points, faces=np.array([[0,0,0]]), process=False)
     return mesh
 
