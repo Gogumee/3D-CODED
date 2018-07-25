@@ -4,6 +4,11 @@ channels:
   - soumith
   - defaults
 dependencies:
+  - ca-certificates=2018.4.16=0
+  - certifi=2018.4.16=py27_0
+  - networkx=2.1=py_1
+  - openssl=1.0.2o=0
+  - trimesh=2.31.38=py_0
   - backports=1.0=py27h63c9359_1
   - backports.functools_lru_cache=1.4=py27he8db605_1
   - backports.shutil_get_terminal_size=1.0.0=py27h5bc021e_2
@@ -117,8 +122,6 @@ dependencies:
   - yaml=0.1.7=had09818_2
   - zeromq=4.2.2=hbedb6e5_2
   - zlib=1.2.11=ha838bed_2
-  - magma-cuda90=2.2.0=hae16b58_1
-  - magma-cuda80=2.1.0=5
   - pip:
     - absl-py==0.1.10
     - backports.ssl-match-hostname==3.5.0.1
@@ -138,17 +141,12 @@ dependencies:
     - pillow==5.0.0
     - progressbar==2.3
     - protobuf==3.5.1
-    - pymesh2==0.1.14
     - requests==2.18.4
     - scikit-learn==0.19.1
     - scipy==1.0.0
     - seaborn==0.8.1
     - sklearn==0.0
-    - torch==0.4.0a0+ea02833
-    - torchfile==0.1.0
-    - torchvision==0.2.0
     - tqdm==4.19.5
-    - trimesh==2.22.27
     - urllib3==1.22
     - virtualenv==15.1.0
     - visdom==0.1.7

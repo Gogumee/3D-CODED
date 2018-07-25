@@ -162,10 +162,6 @@ def save(mesh, mesh_color, path, red, green, blue):
     to_write = mesh.vertices
     b = np.zeros((len(mesh.faces),4)) + 3
     b[:,1:] = np.array(mesh.faces)
-    print(np.shape(to_write))
-    print(np.shape(blue))
-    print(np.shape(red))
-    print(np.shape(green))
     points2write = pd.DataFrame({
         'lst0Tite': to_write[:,0],
         'lst1Tite': to_write[:,1],
@@ -174,8 +170,6 @@ def save(mesh, mesh_color, path, red, green, blue):
         'lst4Tite': green,
         'lst5Tite': blue,
         })
-    # print(points2write)
-    # print('writing ply')
     write_ply(filename=path, points=points2write, as_text=True, text=False, faces = pd.DataFrame(b.astype(int)), color = True)    
 def reconstruct(input_p):
     """

@@ -21,17 +21,19 @@ If you find this work useful in your research, please consider citing:
 
 ## Project Page
 
-The project page is available [http://imagine.enpc.fr/~groueixt/correspondences/](http://imagine.enpc.fr/~groueixt/3D-CODED/index.html)
+The project page is available [http://imagine.enpc.fr/~groueixt/3D-CODED/](http://imagine.enpc.fr/~groueixt/3D-CODED/index.html)
 
 ## Install
 
-#### 
+#### Piece of advice
+
+If you choose to compile pytorch v4 from source (the hard install), you'll probably face compatibility issues with ```gcc```. It's very easy to set up is ```update-alternative``` for ```gcc``` is correctly set up. I recommend being able to navigate between ```gcc-4.8``` , ```gcc-5``` and ```gcc-6```. You can look [here](https://github.com/ThibaultGROUEIX/workflow_and_installs/blob/master/initial_steps.md#gcc-g) for a quick tuto on how to set things up on ubuntu. 
 
 #### Clone the repo
 
 ```shell
 ## Download the repository
-git clone git@github.com:ThibaultGROUEIX/template-based-correspondences.git
+git clone git@github.com:ThibaultGROUEIX/3D-CODED.git
 ## Create python env with relevant packages
 conda env create -f auxiliary/pytorch-sources.yml
 source activate pytorch-sources
@@ -49,25 +51,39 @@ This implementation uses [Pytorch](http://pytorch.org/). Please note that the Ch
 
 **<u>Recommended</u>** : *Python* **2.7**, *Pytorch* **1.12**
 
-**<u>If you need v4</u>** : 
+**<u>If you need v4</u>** : From [pytorch' repo](https://github.com/pytorch/pytorch)
 
 ```shell
+source activate pytorch-sources
 git clone --recursive https://github.com/pytorch/pytorch
 cd pytorch ; git reset --hard ea02833 #Go to this specific commit that works fine for the chamfer distance
+
 # Then follow pytorch install instruction as usual
+export CMAKE_PREFIX_PATH="$(dirname $(which conda))/../" # [anaconda root directory]
+
+# Install basic dependencies
+conda install numpy pyyaml mkl mkl-include setuptools cmake cffi typing
+conda install -c mingfeima mkldnn
+
+# Add LAPACK support for the GPU
+conda install -c pytorch magma-cuda80 # or magma-cuda90 if CUDA 9 or magma-cuda91 if CUDA 9.1
+
+python setup.py install # I needed to use gcc-4.8
+
+#Also install torchvision from sources in this case
+git clone https://github.com/pytorch/vision.git
+cd vision
+python setup.py install
 ```
 
-Developped in python 2.7, so might need a few adjustements for python 3.6. 
+The whole code is developped in python 2.7, so might need a few adjustements for python 3.6. 
 
-#### Install Pymesh in your new Conda environment
 
-Follow the specific repo instruction [here](https://github.com/qnzhou/PyMesh).
-
-Pymesh is my favorite Geometry Processing Library for Python, it's developed by an Adobe researcher : [Qingnan Zhou](https://research.adobe.com/person/qingnan-zhou/).
 
 #### Build chamfer distance
 
 ```shell
+#use gcc-5 or higher (doesn't build with gcc-4.8)
 cd AtlasNet/nndistance/src
 nvcc -c -o nnd_cuda.cu.o nnd_cuda.cu -x cu -Xcompiler -fPIC -arch=sm_52
 cd ..
@@ -98,7 +114,7 @@ This script takes as input 2 meshes from ```data``` and compute correspondences 
 
 You need to make sure your meshes are preprocessed correctly :
 
-* The meshes are loaded with pymesh, which should support a bunch of formats, but I only tested ```.ply``` files. Good converters include [Assimp](https://github.com/assimp/assimp) and [Pymesh](https://github.com/qnzhou/PyMesh).
+* The meshes are loaded with Trimesh, which should support a bunch of formats, but I only tested ```.ply``` files. Good converters include [Assimp](https://github.com/assimp/assimp) and [Pymesh](https://github.com/qnzhou/PyMesh).
 
 
 * The trunk axis is the Y axis (visualize your mesh against the mesh in ```data``` to make sure they are normalized in the same way). 
@@ -183,4 +199,4 @@ python ./training/train_correspondences.py --env $env  |& tee ${env}.txt
 
 [MIT](https://github.com/ThibaultGROUEIX/AtlasNet/blob/master/license_MIT)
 
-[![Analytics](https://ga-beacon.appspot.com/UA-91308638-2/github.com/ThibaultGROUEIX/template-based-correspondences/readme.md?pixel)](https://github.com/ThibaultGROUEIX/template-based-correspondences/)
+[![Analytics](https://ga-beacon.appspot.com/UA-91308638-2/github.com/ThibaultGROUEIX/3D-CODED/readme.md?pixel)](https://github.com/ThibaultGROUEIX/3D-CODED/)
