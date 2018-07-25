@@ -16,14 +16,13 @@ class SMPL(data.Dataset):
         self.npoints = npoints
         # PATH  : YOU PROBABLY NEED TO EDIT THOSE
         if self.train:
-            self.path = "/home/thibault/lib/smpl/smpl_webuser/hello_world/dataset-gaussian/"
-            self.path_2 = "/home/thibault/Dropbox/ECCV/quantitative_results/dataset_augmented/"
-            self.path_3 = "/home/thibault/lib/smpl/smpl_webuser/hello_world/dataset-continuous/"
+            self.path = "./data/dataset-bent/"
+            self.path_2 = "./data/dataset-surreal/"
         else:
-            self.path = "/home/thibault/lib/smpl/smpl_webuser/hello_world/dataset-gaussian-val/"
+            self.path = "./data/dataset-surreal-val/"
 
         # template
-        self.mesh = pymesh.load_mesh("/home/thibault/Downloads/MPI-FAUST/training/registrations/tr_reg_000.ply")
+        self.mesh = pymesh.load_mesh("./data/template/template.ply")
         a = self.mesh.vertices[self.mesh.faces[:, 0]]
         b = self.mesh.vertices[self.mesh.faces[:, 1]]
         c = self.mesh.vertices[self.mesh.faces[:, 2]]

@@ -1,4 +1,4 @@
-# 3D-CODED : 3D Correspondences by Deep Deformation
+# 3D-CODED : 3D Correspondences by Deep Deformation :page_with_curl:
 
 This repository contains the source codes for the paper [3D-CODED : 3D Correspondences by Deep Deformation](http://imagine.enpc.fr/~groueixt/3D-CODED/index.html). The task is to put 2 meshes in point-wise correspondence. Below, given 2 humans scans with holes, the reconstruction are in correspondence (suggested by color).
 
@@ -6,7 +6,7 @@ This repository contains the source codes for the paper [3D-CODED : 3D Correspon
 
 <img src="README/mesh25.ply.gif" style="zoom:80%" /><img src="README/25RecBestRotReg.ply.gif" style="zoom:80%" />
 
-## Citing this work
+## Citing this work 
 
 If you find this work useful in your research, please consider citing:
 
@@ -19,11 +19,11 @@ If you find this work useful in your research, please consider citing:
         }
 ```
 
-## Project Page
+## Project Page 
 
 The project page is available [http://imagine.enpc.fr/~groueixt/3D-CODED/](http://imagine.enpc.fr/~groueixt/3D-CODED/index.html)
 
-## Install
+## Install :construction_worker:
 
 #### Piece of advice
 
@@ -42,7 +42,7 @@ conda install torchvision
 ```
 
 This implementation uses [Pytorch](http://pytorch.org/). Please note that the Chamfer Distance code doesn't work on  [all versions of pytorch](http://pytorch.org/) because of some weird error with the batch norm layers. It has been tested on v1.12, v3 and a specific commit of v4.
-#### Pytorch compatibility
+#### Pytorch compatibility 
 
 | Python/[Pytorch](http://pytorch.org/) | v1.12           | v2  | v3.1  |  0.4.0a0+ea02833 | 0.4.x latest |
 | ------------- |:-------------:| -----:|-----:|-----:| ------------- |
@@ -80,7 +80,7 @@ The whole code is developped in python 2.7, so might need a few adjustements for
 
 
 
-#### Build chamfer distance
+#### Build chamfer distance 
 
 ```shell
 #use gcc-5 or higher (doesn't build with gcc-4.8)
@@ -95,13 +95,13 @@ python test.py
 
 
 
-## Using the Trained models
+## Using the Trained models :train2:
 
 The trained models and some corresponding results are also available online :
 
 - [The trained_models](https://cloud.enpc.fr/s/n4L7jqD486V8IJn) go in ``` trained_models/```
 
-#### On the demo meshes
+#### On the demo meshes 
 
 Require 3 GB of RAM on the GPU and 17 sec to run (Titan X Pascal). 
 
@@ -121,7 +121,7 @@ You need to make sure your meshes are preprocessed correctly :
 * the scale should be about 1.7 for a standing human (meaning the unit for the point cloud is the ```cm```). You can automatically scale them with the flag ```--scale 1```
 
 
-#### Options 
+#### Options  
 
 ```python
 '--HR', type=int, default=1, help='Use high Resolution template for better precision in the nearest neighbor step ?'
@@ -140,7 +140,7 @@ You need to make sure your meshes are preprocessed correctly :
 
 
 
-#### Failure modes instruction :
+#### Failure modes instruction : :warning:
 
 - Sometimes the reconstruction is flipped, which break the correspondences. In the easiest case where you meshes are registered in the same orientation, you can just fix this angle in ```reconstruct.py``` line 86, to avoid the flipping problem. Also note from this line that the angle search only looks in [-90°,+90°].
 
@@ -153,13 +153,29 @@ You need to make sure your meshes are preprocessed correctly :
 
 ## Training the autoencoder TODO
 
-#### Data 
+#### Data  
 
 The dataset can't be shared because of copyrights issues. Since the generation process of the dataset is quite heavy, it has it's own README in ```data/README.md```. Brace yourselve :-)
 
+
+#### Install Pymesh
+
+Follow the specific repo instruction [here](https://github.com/qnzhou/PyMesh).
+
+Pymesh is my favorite Geometry Processing Library for Python, it's developed by an Adobe researcher : [Qingnan Zhou](https://research.adobe.com/person/qingnan-zhou/). It can be tricky to set up. Trimesh is good alternative but requires a few code edits in this case.
+
 #### Options
 
-* TODO
+```python
+'--batchSize', type=int, default=32, help='input batch size'
+'--workers', type=int, help='number of data loading workers', default=8
+'--nepoch', type=int, default=75, help='number of epochs to train for'
+'--model', type=str, default='', help='optional reload model path'
+'--env', type=str, default="unsup-symcorrect-ratio", help='visdom environment'
+'--laplace', type=int, default=0, help='regularize towords 0 curvature, or template curvature'
+```
+
+
 
 #### Now you can start training
 
@@ -169,19 +185,21 @@ The dataset can't be shared because of copyrights issues. Since the generation p
 python -m visdom.server -p 8888
 ```
 
-* Launch the training. Check out all the options in ```./training/train_correspondences.py``` .
+* Launch the training. Check out all the options in ```./training/train_sup.py``` .
 
 ```shell
 export CUDA_VISIBLE_DEVICES=0 #whichever you want
 source activate pytorch-atlasnet
 git pull
-env=correspondences
-python ./training/train_correspondences.py --env $env  |& tee ${env}.txt
+env=3D-CODED
+python ./training/train_sup.py --env $env  |& tee ${env}.txt
 ```
 
 * Monitor your training on http://localhost:8888/
 
-![visdom](pictures/TODO.png)
+![visdom](/home/thibault/projects/3D-CODED/README/1532524819586.png)
+
+
 
 ## Acknowledgement
 

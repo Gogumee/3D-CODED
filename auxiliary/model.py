@@ -113,7 +113,7 @@ class PointGenCon(nn.Module):
         return x
 
 class AE_AtlasNet_Humans(nn.Module):
-    def __init__(self, num_points = 2048, bottleneck_size = 1024, nb_primitives = 1):
+    def __init__(self, num_points = 6890, bottleneck_size = 1024, nb_primitives = 1):
         super(AE_AtlasNet_Humans, self).__init__()
         self.num_points = num_points
         self.bottleneck_size = bottleneck_size
@@ -231,7 +231,7 @@ class AE_AtlasNet_Humans(nn.Module):
         return torch.cat(outs,2).contiguous().transpose(2,1).contiguous()
 
 class AE_AtlasNet_Animal(nn.Module):
-    def __init__(self, num_points = 2048, bottleneck_size = 1024, nb_primitives = 1):
+    def __init__(self, num_points = 6890, bottleneck_size = 1024, nb_primitives = 1):
         super(AE_AtlasNet_Animal, self).__init__()
         self.num_points = num_points
         self.bottleneck_size = bottleneck_size
