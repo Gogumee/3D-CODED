@@ -29,7 +29,7 @@ The project page is available [http://imagine.enpc.fr/~groueixt/3D-CODED/](http:
 
 #### Piece of advice
 
-If you choose to compile pytorch v4 from source (the hard install), you'll probably face compatibility issues with ```gcc```. It's very easy to set up is ```update-alternative``` for ```gcc``` is correctly set up. I recommend being able to navigate between ```gcc-4.8``` , ```gcc-5``` and ```gcc-6```. You can look [here](https://github.com/ThibaultGROUEIX/workflow_and_installs/blob/master/initial_steps.md#gcc-g) for a quick tuto on how to set things up on ubuntu. 
+If you choose to compile pytorch v4 from source (the hard install), you'll probably face compatibility issues with ```gcc```. It's very easy to set up  ```update-alternative``` for ```gcc``` . I recommend being able to navigate between ```gcc-4.8``` , ```gcc-5``` and ```gcc-6```. You can look [here](https://github.com/ThibaultGROUEIX/workflow_and_installs/blob/master/initial_steps.md#gcc-g) for a quick tuto on how to set things up on ubuntu. 
 
 #### Clone the repo
 
