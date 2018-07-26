@@ -112,17 +112,26 @@ python inference/correspondences.py
 ```
 This script takes as input 2 meshes from ```data``` and compute correspondences in ```results```. Reconstruction are saved in ```data```
 
+It should look like :
+
+* **Initial guesses** for *example0* and *example1*:
+
+<img src="README/example_0InitialGuess.ply.gif" style="zoom:80%" /><img src="README/example_1InitialGuess.ply.gif" style="zoom:80%" />
+
+* **Final reconstruction** for *example0* and *example1*:
+
+<img src="README/example_0FinalReconstruction.ply.gif" style="zoom:80%" /><img src="README/example_1FinalReconstruction.ply.gif" style="zoom:80%" />
 
 
 #### On your own meshes
 
 You need to make sure your meshes are preprocessed correctly :
 
-* The meshes are loaded with Trimesh, which should support a bunch of formats, but I only tested ```.ply``` files. Good converters include [Assimp](https://github.com/assimp/assimp) and [Pymesh](https://github.com/qnzhou/PyMesh).
+* The meshes are loaded with **Trimesh**, which should support a bunch of formats, but I only tested ```.ply``` files. Good converters include [**Assimp**](https://github.com/assimp/assimp) and [Pymesh](https://github.com/qnzhou/PyMesh).
 
 
-* The trunk axis is the Y axis (visualize your mesh against the mesh in ```data``` to make sure they are normalized in the same way). 
-* the scale should be about 1.7 for a standing human (meaning the unit for the point cloud is the ```cm```). You can automatically scale them with the flag ```--scale 1```
+* The trunk axis is the **Y axis** (visualize your mesh against the mesh in ```data``` to make sure they are normalized in the same way). 
+* the **scale** should be about 1.7 for a standing human (meaning the unit for the point cloud is the ```cm```). You can automatically scale them with the flag ```--scale 1```
 
 
 #### Options  
@@ -153,7 +162,7 @@ You need to make sure your meshes are preprocessed correctly :
 
 #### Last comments
 
-* If you want to use ```inference/correspondences.py``` to process a hole dataset, like FAUST test set, make sure you don't load the same network in memory every time you compute correspondences between two meshes (which will happen with the naive and simplest way of doing it by calling ```inference/correspondences.py``` iteratively on all the pairs). A example of bad practice is in ```./auxiliary/script.sh```, for the FAUST inter challenge. Good luck :-)
+* If you want to use ```inference/correspondences.py``` to process a hole dataset, like FAUST test set, make sure you don't load the same network in memory every time you compute correspondences between two meshes (which will happen with the naive and simplest way of doing it by calling ```inference/correspondences.py``` iteratively on all the pairs). A example of bad practice is in ```./auxiliary/script.sh```, for the FAUST inter challenge. **Good luck :-)**
 
 ## Training the autoencoder TODO
 
@@ -207,17 +216,17 @@ python ./training/train_sup.py --env $env  |& tee ${env}.txt
 
 ## Acknowledgement
 
-* The code for the Chamfer Loss was taken from Fei Xia'a repo : [PointGan](https://github.com/fxia22/pointGAN). Many thanks to him !
-* The code for the Laplacian regularization comes from [Angjoo Kanazawa](https://people.eecs.berkeley.edu/~kanazawa/) and [Shubham Tulsiani](https://people.eecs.berkeley.edu/~shubhtuls/). This was so helpful, thanks !
-* Part of the SMPL parameters used in the training data comes from [Gül Varol](https://www.di.ens.fr/~varol/)'s repo : https://github.com/gulvarol/surreal But most of all, thanks for all the advices :)
-* The FAUST Team for their prompt reaction in resolving a benchmark issue the week of the deadline, especially to [Federica Bogo](https://ps.is.tuebingen.mpg.de/person/fbogo) and Jonathan Williams.
+* The code for the Chamfer Loss was taken from **[Fei Xia](http://fxia.me/)**'a repo : [PointGan](https://github.com/fxia22/pointGAN). Many thanks to him !
+* The code for the Laplacian regularization comes from [**Angjoo** **Kanazawa**](https://people.eecs.berkeley.edu/~kanazawa/) and [**Shubham** **Tulsiani**](https://people.eecs.berkeley.edu/~shubhtuls/). This was so helpful, thanks !
+* Part of the SMPL parameters used in the training data comes from [**Gül** **Varol**](https://www.di.ens.fr/~varol/)'s repo : https://github.com/gulvarol/surreal But most of all, thanks for all the advices :)
+* The FAUST Team for their prompt reaction in resolving a benchmark issue the week of the deadline, especially to [**Federica** **Bogo**](https://ps.is.tuebingen.mpg.de/person/fbogo) and **Jonathan Williams**.
 * The efficient code for to compute geodesic errors comes from  https://github.com/zorah/KernelMatching. Thanks!
 * The [SMAL](http://smalr.is.tue.mpg.de/) team, and [SCAPE](https://ai.stanford.edu/~drago/Projects/scape/scape.html) team for their help in generating the training data.
 * [DeepFunctional Maps](https://arxiv.org/abs/1704.08686) authors for their fast reply the week of the rebuttal ! Many thanks.
-* [Hiroharu Kato](http://hiroharu-kato.com/projects_en/neural_renderer.html) for his very clean neural renderer code, that I used for the gifs :-)
+* **[Hiroharu Kato](http://hiroharu-kato.com/projects_en/neural_renderer.html)** for his very clean neural renderer code, that I used for the gifs :-)
 * [Pytorch developpers](https://github.com/pytorch/pytorch) for making DL code so easy.
 * This work was funded by [Ecole Doctorale MSTIC](http://www.univ-paris-est.fr/fr/-ecole-doctorale-mathematiques-et-stic-mstic-ed-532/). Thanks !
-* And last but not least, my great co-authors :  [Matthew Fisher](http://graphics.stanford.edu/~mdfisher/publications.html), [Vladimir G. Kim](http://vovakim.com/), [Bryan C. Russell](http://bryanrussell.org/), and [Mathieu Aubry](http://imagine.enpc.fr/~aubrym/cv.html)
+* And last but not least, my great co-authors :  **[Matthew Fisher](http://graphics.stanford.edu/~mdfisher/publications.html), [Vladimir G. Kim](http://vovakim.com/), [Bryan C. Russell](http://bryanrussell.org/), and [Mathieu Aubry](http://imagine.enpc.fr/~aubrym/cv.html)**
 
 ## License
 
