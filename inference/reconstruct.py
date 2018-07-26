@@ -72,7 +72,7 @@ def run(input, scalefactor):
     points = points.cuda()
 
     # Get a low resolution PC to find the best reconstruction after a rotation on the Y axis
-    points_LR = torch.from_numpy(input.vertices[random_sample].astype(np.float32)).contiguous().unsqueeze(0)
+    points_LR = torch.from_numpy(input.vertices.astype(np.float32)).contiguous().unsqueeze(0)
     points_LR = Variable(points_LR)
     points_LR = points_LR.transpose(2, 1).contiguous()
     points_LR = points_LR.cuda()

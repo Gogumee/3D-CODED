@@ -29,7 +29,7 @@ The project page is available [http://imagine.enpc.fr/~groueixt/3D-CODED/](http:
 
 #### Piece of advice
 
-If you choose to compile pytorch v4 from source (the hard install), you'll probably face compatibility issues with ```gcc```. It's very easy to set up  ```update-alternative``` for ```gcc``` . I recommend being able to navigate between ```gcc-4.8``` , ```gcc-5``` and ```gcc-6```. You can look [here](https://github.com/ThibaultGROUEIX/workflow_and_installs/blob/master/initial_steps.md#gcc-g) for a quick tuto on how to set things up on ubuntu. 
+IYou'll have to compile pytorch v4 from source, you'll probably face compatibility issues with ```gcc```. It's very easy to set up  ```update-alternative``` for ```gcc``` . I recommend being able to navigate between ```gcc-4.8``` , ```gcc-5``` and ```gcc-6```. You can look [here](https://github.com/ThibaultGROUEIX/workflow_and_installs/blob/master/initial_steps.md#gcc-g) for a quick tuto on how to set things up on ubuntu. 
 
 #### Clone the repo
 
@@ -39,8 +39,6 @@ git clone git@github.com:ThibaultGROUEIX/3D-CODED.git
 ## Create python env with relevant packages
 conda env create -f auxiliary/pytorch-sources.yml
 source activate pytorch-sources
-conda install pytorch=0.1.12 cuda80 -c soumith #Update cuda80 to cuda90 if relevant
-conda install torchvision
 ```
 
 This implementation uses [Pytorch](http://pytorch.org/). Please note that the Chamfer Distance code doesn't work on  [all versions of pytorch](http://pytorch.org/) because of some weird error with the batch norm layers. It has been tested on v1.12, v3 and a specific commit of v4.
@@ -51,9 +49,9 @@ This implementation uses [Pytorch](http://pytorch.org/). Please note that the Ch
 | 2.7 | :heavy_check_mark: :+1: :smiley: | :no_entry_sign: :thumbsdown: :disappointed: | :no_entry_sign: :thumbsdown: :disappointed: | :heavy_check_mark: :+1: :smiley: | 🚫 👎 😞 |
 | 3.6 | :heavy_check_mark::+1: :smiley: | ? | ? | :no_entry_sign: :thumbsdown: :disappointed: | 🚫 👎 😞 |
 
-**<u>Recommended</u>** : *Python* **2.7**, *Pytorch* **1.12**
+**<u>Recommended</u>** : *Python* **2.7**, *Pytorch* **0.4.0a0+ea02833**
 
-**<u>If you need v4</u>** : From [pytorch' repo](https://github.com/pytorch/pytorch)
+**<u>Install v4</u>** : From [pytorch' repo](https://github.com/pytorch/pytorch)
 
 ```shell
 source activate pytorch-sources
@@ -95,7 +93,9 @@ python test.py
 
 
 
+#### Last advice
 
+* validate your install by running the demo below, and make sure your output match the expected one.
 
 ## Using the Trained models :train2:
 
@@ -111,6 +111,8 @@ Require 3 GB of RAM on the GPU and 17 sec to run (Titan X Pascal).
 python inference/correspondences.py
 ```
 This script takes as input 2 meshes from ```data``` and compute correspondences in ```results```. Reconstruction are saved in ```data```
+
+
 
 #### On your own meshes
 
