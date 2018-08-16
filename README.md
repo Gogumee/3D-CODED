@@ -232,4 +232,12 @@ python ./training/train_sup.py --env $env  |& tee ${env}.txt
 
 [MIT](https://github.com/ThibaultGROUEIX/AtlasNet/blob/master/license_MIT)
 
+
+
+## Cool Contributions
+
+* **Zhongshi Jiang** applying trained models on a monster model :japanese_ogre:
+
+  ![visdom](./README/image.png)
+
 [![Analytics](https://ga-beacon.appspot.com/UA-91308638-2/github.com/ThibaultGROUEIX/3D-CODED/readme.md?pixel)](https://github.com/ThibaultGROUEIX/3D-CODED/)
