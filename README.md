@@ -236,8 +236,8 @@ python ./training/train_sup.py --env $env  |& tee ${env}.txt
 
 ## Cool Contributions
 
-* **Zhongshi Jiang** applying trained models on a monster model :japanese_ogre:
+* **[Zhongshi Jiang](https://cs.nyu.edu/~zhongshi/)** applying trained model on a monster model :japanese_ogre: (**left**: original , **right:** reconstruction)
 
-  ![visdom](./README/image.png)
+![visdom](./README/image.png)
 
 [![Analytics](https://ga-beacon.appspot.com/UA-91308638-2/github.com/ThibaultGROUEIX/3D-CODED/readme.md?pixel)](https://github.com/ThibaultGROUEIX/3D-CODED/)
