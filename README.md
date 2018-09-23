@@ -37,8 +37,8 @@ IYou'll have to compile pytorch v4 from source, you'll probably face compatibili
 ## Download the repository
 git clone git@github.com:ThibaultGROUEIX/3D-CODED.git
 ## Create python env with relevant packages
-conda env create -f auxiliary/pytorch-sources.yml
-source activate pytorch-sources
+conda env create -f auxiliary/pytorch-atlasnet.yml
+source activate pytorch-atlasnet
 ```
 
 This implementation uses [Pytorch](http://pytorch.org/). Please note that the Chamfer Distance code doesn't work on  [all versions of pytorch](http://pytorch.org/) because of some weird error with the batch norm layers. It has been tested on v1.12, v3 and a specific commit of v4.
@@ -54,7 +54,7 @@ This implementation uses [Pytorch](http://pytorch.org/). Please note that the Ch
 **<u>Install v4</u>** : From [pytorch' repo](https://github.com/pytorch/pytorch)
 
 ```shell
-source activate pytorch-sources
+source activate pytorch-atlasnet
 git clone --recursive https://github.com/pytorch/pytorch
 cd pytorch ; git reset --hard ea02833 #Go to this specific commit that works fine for the chamfer distance
 
