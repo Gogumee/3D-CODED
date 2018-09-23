@@ -1,4 +1,4 @@
-name: pytorch-sources
+name: pytorch-atlasnet
 channels:
   - pytorch
   - soumith
@@ -151,5 +151,5 @@ dependencies:
     - virtualenv==15.1.0
     - visdom==0.1.7
     - werkzeug==0.14.1
-prefix: /home/thibault/anaconda2/envs/pytorch-sources
+prefix: /home/thibault/anaconda2/envs/pytorch-atlasnet
 
