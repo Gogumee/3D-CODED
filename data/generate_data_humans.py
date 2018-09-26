@@ -5,7 +5,7 @@ sys.path.append('./smpl/smpl_webuser/')
 import pymesh
 import numpy as np
 from smpl_webuser.serialization import load_model
-mesh_ref = pymesh.load_mesh("/home/thibault/Downloads/MPI-FAUST/training/ref/reg_color_ref.ply")
+mesh_ref = pymesh.load_mesh("./template/template_color.ply")
 import cPickle as pickle
 
 
