@@ -164,7 +164,7 @@ You need to make sure your meshes are preprocessed correctly :
 
 * If you want to use ```inference/correspondences.py``` to process a hole dataset, like FAUST test set, make sure you don't load the same network in memory every time you compute correspondences between two meshes (which will happen with the naive and simplest way of doing it by calling ```inference/correspondences.py``` iteratively on all the pairs). A example of bad practice is in ```./auxiliary/script.sh```, for the FAUST inter challenge. **Good luck :-)**
 
-## Training the autoencoder TODO
+## Training the autoencoder
 
 #### Data  
 
