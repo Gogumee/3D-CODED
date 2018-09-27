@@ -57,6 +57,7 @@ This implementation uses [Pytorch](http://pytorch.org/). Please note that the Ch
 source activate pytorch-atlasnet
 git clone --recursive https://github.com/pytorch/pytorch
 cd pytorch ; git reset --hard ea02833 #Go to this specific commit that works fine for the chamfer distance
+git submodule update --init
 
 # Then follow pytorch install instruction as usual
 export CMAKE_PREFIX_PATH="$(dirname $(which conda))/../" # [anaconda root directory]
