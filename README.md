@@ -85,7 +85,7 @@ The whole code is developped in python 2.7, so might need a few adjustements for
 
 ```shell
 #use gcc-5 or higher (doesn't build with gcc-4.8)
-cd AtlasNet/nndistance/src
+cd nndistance/src
 nvcc -c -o nnd_cuda.cu.o nnd_cuda.cu -x cu -Xcompiler -fPIC -arch=sm_52
 cd ..
 python build.py
