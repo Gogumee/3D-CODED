@@ -14,7 +14,6 @@ dependencies:
   - backports_abc=0.5=py27h7b3c97b_0
   - bleach=2.1.2=py27_0
   - bzip2=1.0.6=h6d464ef_2
-  - ca-certificates=2017.08.26=h1d4fec5_0
   - cairo=1.14.10=hdf128ce_6
   - certifi=2017.11.5=py27h71e7faf_0
   - cffi=1.11.4=py27h9745a5d_0
