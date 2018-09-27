@@ -5,9 +5,6 @@ channels:
   - defaults
 dependencies:
   - certifi=2018.4.16=py27_0
-  - networkx=2.1=py_1
-  - openssl=1.0.2o=0
-  - trimesh=2.31.38=py_0
   - backports=1.0=py27h63c9359_1
   - backports.functools_lru_cache=1.4=py27he8db605_1
   - backports.shutil_get_terminal_size=1.0.0=py27h5bc021e_2
@@ -15,7 +12,6 @@ dependencies:
   - bleach=2.1.2=py27_0
   - bzip2=1.0.6=h6d464ef_2
   - cairo=1.14.10=hdf128ce_6
-  - certifi=2017.11.5=py27h71e7faf_0
   - cffi=1.11.4=py27h9745a5d_0
   - cmake=3.9.4=h142f0e9_0
   - configparser=3.5.0=py27h5117587_0
@@ -121,6 +117,7 @@ dependencies:
   - zeromq=4.2.2=hbedb6e5_2
   - zlib=1.2.11=ha838bed_2
   - pip:
+    - trimesh==2.31.38
     - absl-py==0.1.10
     - backports.ssl-match-hostname==3.5.0.1
     - backports.weakref==1.0.post1
