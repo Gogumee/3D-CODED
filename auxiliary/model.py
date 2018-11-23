@@ -1,20 +1,10 @@
 from __future__ import print_function
-import argparse
-import os
-import random
 import torch
 import torch.nn as nn
 import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.optim as optim
 import torch.utils.data
-import torchvision.transforms as transforms
-import torchvision.utils as vutils
 from torch.autograd import Variable
-from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
-import pdb
 import torch.nn.functional as F
 import trimesh
 
@@ -94,14 +84,14 @@ class PointGenCon(nn.Module):
         self.bottleneck_size = bottleneck_size
         super(PointGenCon, self).__init__()
         self.conv1 = torch.nn.Conv1d(self.bottleneck_size, self.bottleneck_size, 1)
-        self.conv2 = torch.nn.Conv1d(self.bottleneck_size, self.bottleneck_size/2, 1)
-        self.conv3 = torch.nn.Conv1d(self.bottleneck_size/2, self.bottleneck_size/4, 1)
-        self.conv4 = torch.nn.Conv1d(self.bottleneck_size/4, 3, 1)
+        self.conv2 = torch.nn.Conv1d(self.bottleneck_size, self.bottleneck_size//2, 1)
+        self.conv3 = torch.nn.Conv1d(self.bottleneck_size//2, self.bottleneck_size//4, 1)
+        self.conv4 = torch.nn.Conv1d(self.bottleneck_size//4, 3, 1)
 
         self.th = nn.Tanh()
         self.bn1 = torch.nn.BatchNorm1d(self.bottleneck_size)
-        self.bn2 = torch.nn.BatchNorm1d(self.bottleneck_size/2)
-        self.bn3 = torch.nn.BatchNorm1d(self.bottleneck_size/4)
+        self.bn2 = torch.nn.BatchNorm1d(self.bottleneck_size//2)
+        self.bn3 = torch.nn.BatchNorm1d(self.bottleneck_size//4)
 
     def forward(self, x):
         batchsize = x.size()[0]

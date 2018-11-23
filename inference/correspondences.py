@@ -3,9 +3,6 @@ import argparse
 import random
 import numpy as np
 import torch
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.utils.data
 import sys
 sys.path.append('./auxiliary/')
 # from datasetFaust import *
@@ -15,8 +12,9 @@ from ply import *
 import reconstruct
 import time
 from sklearn.neighbors import NearestNeighbors
-sys.path.append("./nndistance/")
-from modules.nnd import NNDModule
+sys.path.append("./extension/")
+import dist_chamfer as ext
+distChamfer =  ext.chamferDist()
 import visdom
 import global_variables
 import trimesh
@@ -81,7 +79,7 @@ if __name__ == '__main__':
     global_variables.opt = opt
     vis = visdom.Visdom(port=8888, env=opt.env)
 
-    distChamfer = NNDModule()
+    distChamfer =  ext.chamferDist()
 
     # load network
     global_variables.network = AE_AtlasNet_Humans(num_points=opt.num_points)
@@ -96,7 +94,6 @@ if __name__ == '__main__':
     # print("Random Seed: ", opt.manualSeed)
     random.seed(opt.manualSeed)
     torch.manual_seed(opt.manualSeed)
-    cudnn.benchmark = True
 
     start = time.time()
     print("computing correspondences for " + opt.inputA + " and " + opt.inputB)

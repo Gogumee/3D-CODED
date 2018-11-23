@@ -1,35 +1,25 @@
 from __future__ import print_function
 import argparse
-import os
 import random
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
 import torch.optim as optim
-import torch.utils.data
-import torchvision.datasets as dset
-import torchvision.transforms as transforms
-import torchvision.utils as vutils
 from torch.autograd import Variable
 import sys
-sys.path.append('./aux/')
+sys.path.append('./auxiliary/')
 from datasetFaust import *
 from datasetSMPL2 import *
 from model import *
 from utils import *
 from ply import *
-import sys
 import os
 import json
 import datetime
 import visdom
 
-sys.path.append("./nndistance/")
-from modules.nnd import NNDModule
-
-distChamfer = NNDModule()
+sys.path.append("./extension/")
+import dist_chamfer as ext
+distChamfer =  ext.chamferDist()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batchSize', type=int, default=32, help='input batch size')

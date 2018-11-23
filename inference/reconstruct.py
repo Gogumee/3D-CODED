@@ -1,16 +1,16 @@
 from __future__ import print_function
 import numpy as np
 import torch.utils.data
-from torch.autograd import Variable
 import sys
 sys.path.append('./auxiliary/')
 from model import *
 from utils import *
 from ply import *
 import sys
-sys.path.append("./nndistance/")
-from modules.nnd import NNDModule
-distChamfer = NNDModule()
+import torch.optim as optim
+sys.path.append("./extension/")
+import dist_chamfer as ext
+distChamfer =  ext.chamferDist()
 import global_variables
 import trimesh
 val_loss = AverageValueMeter()
@@ -23,12 +23,12 @@ def regress(points):
     :param points: input points to reconstruct
     :return pointsReconstructed: final reconstruction after optimisation
     """
-    points = Variable(points.data, requires_grad=True)
+    points = points.data
     latent_code = global_variables.network.encoder(points)
     lrate = 0.001  # learning rate
     # define parameters to be optimised and optimiser
     input_param = nn.Parameter(latent_code.data, requires_grad=True)
-    global_variables.optimizer = global_variables.optim.Adam([input_param], lr=lrate)
+    global_variables.optimizer = optim.Adam([input_param], lr=lrate)
     loss = 10
     i = 0
 
@@ -40,7 +40,7 @@ def regress(points):
         loss_net = (torch.mean(dist1)) + (torch.mean(dist2))
         loss_net.backward()
         global_variables.optimizer.step()
-        loss = loss_net.data[0]
+        loss = loss_net.item()
         i = i + 1
     with torch.no_grad():
         if global_variables.opt.HR:
@@ -67,13 +67,11 @@ def run(input, scalefactor):
     random_sample = np.random.choice(np.shape(points)[0], size=10000)
 
     points = torch.from_numpy(points.astype(np.float32)).contiguous().unsqueeze(0)
-    points = Variable(points)
     points = points.transpose(2, 1).contiguous()
     points = points.cuda()
 
     # Get a low resolution PC to find the best reconstruction after a rotation on the Y axis
     points_LR = torch.from_numpy(input.vertices[random_sample].astype(np.float32)).contiguous().unsqueeze(0)
-    points_LR = Variable(points_LR)
     points_LR = points_LR.transpose(2, 1).contiguous()
     points_LR = points_LR.cuda()
 
@@ -82,19 +80,19 @@ def run(input, scalefactor):
     pointsReconstructed = global_variables.network(points_LR)
     dist1, dist2 = distChamfer(points_LR.transpose(2, 1).contiguous(), pointsReconstructed)
     loss_net = (torch.mean(dist1)) + (torch.mean(dist2))
-    # print("loss : ",  loss_net.data[0], 0)
+    # print("loss : ",  loss_net.item(), 0)
     # ---- Search best angle for best reconstruction on the Y axis---
     for theta in np.linspace(-np.pi/2, np.pi/2, global_variables.opt.num_angles):
         if global_variables.opt.num_angles == 1:
             theta = 0
         #  Rotate mesh by theta and renormalise
         rot_matrix = np.array([[np.cos(theta), 0, np.sin(theta)], [0, 1, 0], [- np.sin(theta), 0,  np.cos(theta)]])
-        rot_matrix = Variable(torch.from_numpy(rot_matrix).float()).cuda()
+        rot_matrix = torch.from_numpy(rot_matrix).float().cuda()
         points2 = torch.matmul(rot_matrix, points_LR)
         mesh_tmp = trimesh.Trimesh(process=False, use_embree=False,vertices=points2[0].transpose(1,0).data.cpu().numpy(), faces=global_variables.network.mesh.faces)
         #bbox
         bbox = np.array([[np.max(mesh_tmp.vertices[:,0]), np.max(mesh_tmp.vertices[:,1]), np.max(mesh_tmp.vertices[:,2])], [np.min(mesh_tmp.vertices[:,0]), np.min(mesh_tmp.vertices[:,1]), np.min(mesh_tmp.vertices[:,2])]])
-        norma = Variable(torch.from_numpy((bbox[0] + bbox[1]) / 2).float().cuda())
+        norma = torch.from_numpy((bbox[0] + bbox[1]) / 2).float().cuda()
 
         norma2 = norma.unsqueeze(1).expand(3,points2.size(2)).contiguous()
         points2[0] = points2[0] - norma2
@@ -113,12 +111,12 @@ def run(input, scalefactor):
             norma3 = norma.unsqueeze(0).expand(pointsReconstructed.size(1), 3).contiguous()
             pointsReconstructed[0] = pointsReconstructed[0] + norma3
             rot_matrix = np.array([[np.cos(-theta), 0, np.sin(-theta)], [0, 1, 0], [- np.sin(-theta), 0,  np.cos(-theta)]])
-            rot_matrix = Variable(torch.from_numpy(rot_matrix).float()).cuda()
+            rot_matrix = torch.from_numpy(rot_matrix).float().cuda()
             pointsReconstructed = torch.matmul(pointsReconstructed, rot_matrix.transpose(1,0))
             bestPoints = pointsReconstructed
 
-    # print("best loss and angle : ", bestLoss.data[0], best_theta)
-    val_loss.update(bestLoss.data[0])
+    # print("best loss and angle : ", bestLoss.item(), best_theta)
+    val_loss.update(bestLoss.item())
 
     if global_variables.opt.HR:
         faces_tosave = global_variables.network.mesh_HR.faces
@@ -134,18 +132,18 @@ def run(input, scalefactor):
     
     # rotate with optimal angle
     rot_matrix = np.array([[np.cos(best_theta), 0, np.sin(best_theta)], [0, 1, 0], [- np.sin(best_theta), 0,  np.cos(best_theta)]])
-    rot_matrix = Variable(torch.from_numpy(rot_matrix).float()).cuda()
+    rot_matrix = torch.from_numpy(rot_matrix).float().cuda()
     points2 = torch.matmul(rot_matrix, points)
     mesh_tmp = trimesh.Trimesh(vertices=points2[0].transpose(1,0).data.cpu().numpy(), faces=global_variables.network.mesh.faces)
     bbox = np.array([[np.max(mesh_tmp.vertices[:,0]), np.max(mesh_tmp.vertices[:,1]), np.max(mesh_tmp.vertices[:,2])], [np.min(mesh_tmp.vertices[:,0]), np.min(mesh_tmp.vertices[:,1]), np.min(mesh_tmp.vertices[:,2])]])
-    norma = Variable(torch.from_numpy((bbox[0] + bbox[1]) / 2).float().cuda())
+    norma = torch.from_numpy((bbox[0] + bbox[1]) / 2).float().cuda()
     norma2 = norma.unsqueeze(1).expand(3,points2.size(2)).contiguous()
     points2[0] = points2[0] - norma2
     pointsReconstructed1 = regress(points2)
     # unrotate with optimal angle
     norma3 = norma.unsqueeze(0).expand(pointsReconstructed1.size(1), 3).contiguous()
     rot_matrix = np.array([[np.cos(-best_theta), 0, np.sin(-best_theta)], [0, 1, 0], [- np.sin(-best_theta), 0,  np.cos(-best_theta)]])
-    rot_matrix = Variable(torch.from_numpy(rot_matrix).float()).cuda()
+    rot_matrix = torch.from_numpy(rot_matrix).float().cuda()
     pointsReconstructed1[0] = pointsReconstructed1[0] + norma3
     pointsReconstructed1 = torch.matmul(pointsReconstructed1, rot_matrix.transpose(1,0))
     
