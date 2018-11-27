@@ -1,3 +1,5 @@
+🚀 Major upgrade 🚀 : Migration to  **Pytorch v1** and **Python 3.7**. The code is now much more generic and easy to install. 
+
 # 3D-CODED : 3D Correspondences by Deep Deformation :page_with_curl:
 
 This repository contains the source codes for the paper [3D-CODED : 3D Correspondences by Deep Deformation](http://imagine.enpc.fr/~groueixt/3D-CODED/index.html). The task is to put 2 meshes in point-wise correspondence. Below, given 2 humans scans with holes, the reconstruction are in correspondence (suggested by color).
@@ -27,76 +29,26 @@ The project page is available [http://imagine.enpc.fr/~groueixt/3D-CODED/](http:
 
 ## Install :construction_worker:
 
-#### Piece of advice
-
-IYou'll have to compile pytorch v4 from source, you'll probably face compatibility issues with ```gcc```. It's very easy to set up  ```update-alternative``` for ```gcc``` . I recommend being able to navigate between ```gcc-4.8``` , ```gcc-5``` and ```gcc-6```. You can look [here](https://github.com/ThibaultGROUEIX/workflow_and_installs/blob/master/initial_steps.md#gcc-g) for a quick tuto on how to set things up on ubuntu. 
-
-#### Clone the repo
+This implementation uses [Pytorch](http://pytorch.org/). 
 
 ```shell
-## Download the repository
-git clone git@github.com:ThibaultGROUEIX/3D-CODED.git
-## Create python env with relevant packages
-conda env create -f auxiliary/pytorch-atlasnet.yml
+git clone git@github.com:ThibaultGROUEIX/3D-CODED.git ## Download the repo
+conda create --name pytorch-atlasnet python=3.7 ## Create python env
 source activate pytorch-atlasnet
+pip install pandas visdom
+conda install pytorch torchvision -c pytorch # or from sources if you prefer
+# you're done ! Congrats :)
 ```
 
-This implementation uses [Pytorch](http://pytorch.org/). Please note that the Chamfer Distance code doesn't work on  [all versions of pytorch](http://pytorch.org/) because of some weird error with the batch norm layers. It has been tested on v1.12, v3 and a specific commit of v4.
-#### Pytorch compatibility 
-
-| Python/[Pytorch](http://pytorch.org/) | v1.12           | v2  | v3.1  |  0.4.0a0+ea02833 | 0.4.x latest |
-| ------------- |:-------------:| -----:|-----:|-----:| ------------- |
-| 2.7 | :heavy_check_mark: :+1: :smiley: | :no_entry_sign: :thumbsdown: :disappointed: | :no_entry_sign: :thumbsdown: :disappointed: | :heavy_check_mark: :+1: :smiley: | 🚫 👎 😞 |
-| 3.6 | :heavy_check_mark::+1: :smiley: | ? | ? | :no_entry_sign: :thumbsdown: :disappointed: | 🚫 👎 😞 |
-
-**<u>Recommended</u>** : *Python* **2.7**, *Pytorch* **0.4.0a0+ea02833**
-
-**<u>Install v4</u>** : From [pytorch' repo](https://github.com/pytorch/pytorch)
-
-```shell
-source activate pytorch-atlasnet
-git clone --recursive https://github.com/pytorch/pytorch
-cd pytorch ; git reset --hard ea02833 #Go to this specific commit that works fine for the chamfer distance
-git submodule update --init
-
-# Then follow pytorch install instruction as usual
-export CMAKE_PREFIX_PATH="$(dirname $(which conda))/../" # [anaconda root directory]
-
-# Install basic dependencies
-conda install numpy pyyaml mkl mkl-include setuptools cmake cffi typing
-conda install -c mingfeima mkldnn
-
-# Add LAPACK support for the GPU
-conda install -c pytorch magma-cuda80 # or magma-cuda90 if CUDA 9 or magma-cuda91 if CUDA 9.1
-
-python setup.py install # I needed to use gcc-4.8
-
-#Also install torchvision from sources in this case
-git clone https://github.com/pytorch/vision.git
-cd vision
-python setup.py install
-```
-
-The whole code is developped in python 2.7, so might need a few adjustements for python 3.6. 
-
-
+Tested on 11/18 with  pytorch 0.4.1 (py37_py36_py35_py27__9.0.176_7.1.2_2) and [latest source](
 
 #### Build chamfer distance 
 
 ```shell
-#use gcc-5 or higher (doesn't build with gcc-4.8)
-cd nndistance/src
-nvcc -c -o nnd_cuda.cu.o nnd_cuda.cu -x cu -Xcompiler -fPIC -arch=sm_52
-cd ..
-python build.py
-python test.py
+source activate pytorch-atlasnet
+cd 3D-CODED/extension
+python setup.py install
 ```
-
-
-
-#### Last advice
-
-* validate your install by running the demo below, and make sure your output match the expected one.
 
 ## Using the Trained models :train2:
 
@@ -109,6 +61,7 @@ The trained models and some corresponding results are also available online :
 Require 3 GB of RAM on the GPU and 17 sec to run (Titan X Pascal). 
 
 ```shell
+cd trained_models; ./download_models.sh; cd .. # download the trained models
 python inference/correspondences.py
 ```
 This script takes as input 2 meshes from ```data``` and compute correspondences in ```results```. Reconstruction are saved in ```data```
@@ -213,11 +166,20 @@ python ./training/train_sup.py --env $env  |& tee ${env}.txt
 
 ![visdom](./README/1532524819586.png)
 
+* Timings, results, memory requirements
+
+| Method         | Faust euclidean error in cm | GPU memory | Time by epoch⁽²⁾ |
+| -------------- | --------------------------- | ---------- | ---------------- |
+| train_sup.py   | 2.878                       | TODO       | TODO             |
+| train_unsup.py | 4.883                       | TODO       | TODO             |
+
+⁽²⁾this is only an estimate, the code is not optimised
+
 
 
 ## Acknowledgement
 
-* The code for the Chamfer Loss was taken from **[Fei Xia](http://fxia.me/)**'a repo : [PointGan](https://github.com/fxia22/pointGAN). Many thanks to him !
+* The code for the Chamfer Loss was adapted from **[Fei Xia](http://fxia.me/)**'a repo : [PointGan](https://github.com/fxia22/pointGAN). Many thanks to him !
 * The code for the Laplacian regularization comes from [**Angjoo** **Kanazawa**](https://people.eecs.berkeley.edu/~kanazawa/) and [**Shubham** **Tulsiani**](https://people.eecs.berkeley.edu/~shubhtuls/). This was so helpful, thanks !
 * Part of the SMPL parameters used in the training data comes from [**Gül** **Varol**](https://www.di.ens.fr/~varol/)'s repo : https://github.com/gulvarol/surreal But most of all, thanks for all the advices :)
 * The FAUST Team for their prompt reaction in resolving a benchmark issue the week of the deadline, especially to [**Federica** **Bogo**](https://ps.is.tuebingen.mpg.de/person/fbogo) and **Jonathan Williams**.

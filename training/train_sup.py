@@ -4,10 +4,8 @@ import random
 import numpy as np
 import torch
 import torch.optim as optim
-from torch.autograd import Variable
 import sys
 sys.path.append('./auxiliary/')
-from datasetFaust import *
 from datasetSMPL2 import *
 from model import *
 from utils import *
@@ -17,20 +15,29 @@ import json
 import datetime
 import visdom
 
-sys.path.append("./extension/")
-import dist_chamfer as ext
-distChamfer =  ext.chamferDist()
+# =============PARAMETERS======================================== #
+path_faust_centered_bb_test_cleaned = "/home/thibault/ssd/3DCODED_data/path_faust_centered_bb_test_cleaned/"
+path_faust_centered_bb_train = "/home/thibault/ssd/3DCODED_data/faust_centered_bb_train/"
+path_val_dataset_augmented = "/home/thibault/ssd/3DCODED_data/val_dataset_augmented/"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batchSize', type=int, default=32, help='input batch size')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=8)
-parser.add_argument('--nepoch', type=int, default=20000, help='number of epochs to train for')
+parser.add_argument('--nepoch', type=int, default=35, help='number of epochs to train for')
 parser.add_argument('--model', type=str, default='', help='optional reload model path')
-parser.add_argument('--env', type=str, default="supervised-3D-CODED", help='visdom environment')
+parser.add_argument('--env', type=str, default="3DCODED_supervised", help='visdom environment')
 
 opt = parser.parse_args()
 print(opt)
+# ========================================================== #
 
+# =============DEFINE CHAMFER LOSS======================================== #
+sys.path.append("./extension/")
+import dist_chamfer as ext
+distChamfer =  ext.chamferDist()
+# ========================================================== #
+
+# =============DEFINE stuff for logs ======================================== #
 # Launch visdom for visualization
 vis = visdom.Visdom(port=8888, env=opt.env)
 now = datetime.datetime.now()
@@ -46,102 +53,51 @@ opt.manualSeed = random.randint(1, 10000)  # fix seed
 print("Random Seed: ", opt.manualSeed)
 random.seed(opt.manualSeed)
 torch.manual_seed(opt.manualSeed)
-best_val_loss = 10
-best_val_smpl_loss = 10
-best_val_loss_id = 0
-best_val_smpl_loss_id = 0
-best_correspondence_loss = 10
-best_correspondence_loss_id = 0
-
-# Create train/test dataloader
-dataset = SMPL(train=True, regular = True)
-print(dataset.path)
-print(dataset.path_2)
-
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize,
-                                         shuffle=True, num_workers=int(opt.workers))
-
-
-dataset_smpl_test = SMPL(train=False)
-dataloader_smpl_test = torch.utils.data.DataLoader(dataset_smpl_test, batch_size=opt.batchSize,
-                                         shuffle=False, num_workers=int(opt.workers))
-
-dataset_valCorrepondance = FAUST(train=True, correspondance=True)
-dataloader_valCorrepondance = torch.utils.data.DataLoader(dataset_valCorrepondance,
-                                                          batch_size=len(dataset_valCorrepondance),
-                                                          shuffle=False, num_workers=int(opt.workers))
-dataset_test = FAUST(train=True)
-dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=opt.batchSize,
-                                              shuffle=False, num_workers=int(opt.workers))
-
-print('training set', len(dataset))
-print('testing set', len(dataset_test))
-
-cudnn.benchmark = True
-len_dataset = len(dataset)
-
-# create network
-network = AE_AtlasNet_Humans()
-
-network.cuda()  # put network on GPU
-
-# print(network)
-
-network.apply(weights_init)  # initialization of the weight
-
-if opt.model != '':
-    network.load_state_dict(torch.load(opt.model))
-    print(" Previous weight loaded ")
-
-lrate = 0.001  # learning rate
-optimizer = optim.Adam(network.parameters(), lr=lrate)
-
+L2curve_train_loss_L2_smpl = []
+L2curve_val_smlp_augmented = []
+curve_faust_centered_bb_test_cleaned = []
+L2curve_faust_centered_bb_train = []
+test_loss_L2_smpl_curve = []
 # meters to record stats on learning
 train_loss_L2_smpl = AverageValueMeter()
 val_smpl_augmented = AverageValueMeter()
 test_loss_L2_smpl = AverageValueMeter()
-train_loss_correspondances = AverageValueMeter()
-val_loss = AverageValueMeter()
-my_val_loss = AverageValueMeter()
-val_correspondance = AverageValueMeter()
+loss_faust_centered_bb_test_cleaned = AverageValueMeter()
+tmp_val_loss = AverageValueMeter()
+L2loss_faust_centered_bb_train = AverageValueMeter()
+# ========================================================== #
+
+
+# ===================CREATE DATASET================================= #
+dataset = SMPL(train=True, regular = True)
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize,
+                                         shuffle=True, num_workers=int(opt.workers))
+dataset_smpl_test = SMPL(train=False)
+dataloader_smpl_test = torch.utils.data.DataLoader(dataset_smpl_test, batch_size=opt.batchSize,
+                                         shuffle=False, num_workers=int(opt.workers))
+len_dataset = len(dataset)
+# ========================================================== #
+
+# ===================CREATE network================================= #
+network = AE_AtlasNet_Humans()
+network.cuda()  # put network on GPU
+network.apply(weights_init)  # initialization of the weight
+if opt.model != '':
+    network.load_state_dict(torch.load(opt.model))
+    print(" Previous weight loaded ")
+# ========================================================== #
+
+# ===================CREATE optimizer================================= #
+lrate = 0.001  # learning rate
+optimizer = optim.Adam(network.parameters(), lr=lrate)
+
 with open(logname, 'a') as f:  # open and append
     f.write(str(network) + '\n')
+# ========================================================== #
 
-# initialize learning curve on visdom, and color for each primitive in visdom display
-train_chamfer_curve = vis.line(
-    X=np.array([0]),
-    Y=np.array([0]),
-)
-train_correspondances_curve = vis.line(
-    X=np.array([0]),
-    Y=np.array([0]),
-)
-val_curve = vis.line(
-    X=np.array([0]),
-    Y=np.array([1]),
-)
-val_correspondance_curve = vis.line(
-    X=np.array([0]),
-    Y=np.array([1]),
-)
-test_loss_L2_smpl_curve = vis.line(
-    X=np.array([0]),
-    Y=np.array([1]),
-)
-labels_generated_points = torch.Tensor(
-    range(1, (opt.nb_primitives + 1) * (opt.num_points / opt.nb_primitives) + 1)).view(
-    opt.num_points / opt.nb_primitives, (opt.nb_primitives + 1)).transpose(0, 1)
-labels_generated_points = (labels_generated_points) % (opt.nb_primitives + 1)
-labels_generated_points = labels_generated_points.contiguous().view(-1)
-print(labels_generated_points)
-
-
-def isReg(x):
-    return (x[0:6] == "tr_reg") and int(x[7:10]) < opt.denseSupervision
-mesh_ref = pymesh.load_mesh("/home/thibault/Downloads/MPI-FAUST/training/ref/reg_color_ref.ply")
-
+# =============Define eval functions L2 and chamfer ========================= #
 def L2(path):
-    my_val_loss.reset()
+    tmp_val_loss.reset()
     with torch.no_grad():
         for i in range(1000):
             try:
@@ -151,28 +107,28 @@ def L2(path):
                 points = points - (input.bbox[0] + input.bbox[1]) / 2
 
                 points = torch.from_numpy(points.astype(np.float32)).contiguous().unsqueeze(0)
-                points = Variable(points)
                 points = points.transpose(2, 1).contiguous()
                 points = points.cuda()
                 with torch.no_grad():
                     pointsReconstructed = network(points)
                     loss_net = torch.mean(
                         (pointsReconstructed - points.transpose(2, 1).contiguous()) ** 2)
+                # the 8th is rotated so can't be properly reconstructed without pre processing
                 if i%10==8:
                     continue
-                my_val_loss.update(loss_net.data[0])
+                tmp_val_loss.update(loss_net.item())
             except:
                 print(path, i)
                 break
     log_table = {
-        "my_val_loss": my_val_loss.avg,
+        "tmp_val_loss": tmp_val_loss.avg,
     }
     print(log_table)
-    return my_val_loss.avg
+    return tmp_val_loss.avg
 
 
 def chamfer(path):
-    my_val_loss.reset()
+    tmp_val_loss.reset()
     with torch.no_grad():
         for i in range(1001):
             try:
@@ -180,79 +136,68 @@ def chamfer(path):
                 input = pymesh.load_mesh(path + str(i) + ".ply")
                 points = input.vertices
                 points = torch.from_numpy(points.astype(np.float32)).contiguous().unsqueeze(0)
-                points = Variable(points)
                 points = points.transpose(2, 1).contiguous()
                 points = points.cuda()
                 with torch.no_grad():
                     pointsReconstructed = network(points)
                     dist1, dist2 = distChamfer(points.transpose(2, 1).contiguous(), pointsReconstructed)
                     loss_net = (torch.mean(dist1)) + (torch.mean(dist2))
-                my_val_loss.update(loss_net.data[0])
+                tmp_val_loss.update(loss_net.item())
             except:
                 print(path, i)
                 break
     log_table = {
-        "my_val_loss": my_val_loss.avg,
+        "tmp_val_loss": tmp_val_loss.avg,
     }
     print(log_table)
-    return my_val_loss.avg
+    return tmp_val_loss.avg
+# ========================================================== #
 
-# start of the learning loop
+
+
+# =============start of the learning loop ======================================== #
 for epoch in range(opt.nepoch):
     if epoch==25:
-        lrate = lrate/10  # learning rate
+        lrate = lrate/10.0  # learning rate scheduled decay
         optimizer = optim.Adam(network.parameters(), lr=lrate)
 
     # TRAIN MODE
     train_loss_L2_smpl.reset()
-    train_loss_correspondances.reset()
     network.train()
-    if not epoch < 1:
-        for i, data in enumerate(dataloader, 0):
-            optimizer.zero_grad()
-            points, idx,_ = data
+    for i, data in enumerate(dataloader, 0):
+        optimizer.zero_grad()
+        points, idx,_ = data
 
-            points = Variable(points)
-            points = points.transpose(2, 1).contiguous()
-            points = points.cuda()
+        points = points.transpose(2, 1).contiguous()
+        points = points.cuda()
 
-            pointsReconstructed = network.forward_idx(points, idx)  # forward pass
-            loss_net = torch.mean(
-                    (pointsReconstructed - points.transpose(2, 1).contiguous()) ** 2)
-            loss_net.backward()
-            train_loss_L2_smpl.update(loss_net.data[0])
-            optimizer.step()  # gradient update
+        pointsReconstructed = network.forward_idx(points, idx)  # forward pass
+        loss_net = torch.mean(
+                (pointsReconstructed - points.transpose(2, 1).contiguous()) ** 2)
+        loss_net.backward()
+        train_loss_L2_smpl.update(loss_net.item())
+        optimizer.step()  # gradient update
 
-            # VIZUALIZE
-            if i % 100 == 0:
-                vis.scatter(X=points.transpose(2, 1).contiguous()[0].data.cpu(),
-                win = 'Train_input',
-                opts = dict(
-                    title="Train_input",
-                    markersize=2,
-                ),
-                )
-                vis.scatter(X=pointsReconstructed[0].data.cpu(),
-                Y = labels_generated_points[0:pointsReconstructed.size(1)],
-                win = 'Train_output',
-                opts = dict(
-                    title="Train_output",
-                    markersize=2,
-                ),
-                )
-
-            print('[%d: %d/%d] train loss:  %f' % (epoch, i, len_dataset / 32,  loss_net.data[0]))
-    if not( epoch%10==0):
-        continue
-    # UPDATE CURVES
-    if train_loss_L2_smpl.avg != 0:
-        vis.updateTrace(
-            X = np.array([epoch]),
-            Y = np.log(np.array([train_loss_L2_smpl.avg])),
-            win = train_chamfer_curve,
-            name = 'L2 train smpl'
+        # VIZUALIZE
+        if i % 100 == 0:
+            vis.scatter(X=points.transpose(2, 1).contiguous()[0].data.cpu(),
+            win = 'Train_input',
+            opts = dict(
+                title="Train_input",
+                markersize=2,
+            ),
+            )
+            vis.scatter(X=pointsReconstructed[0].data.cpu(),
+            win = 'Train_output',
+            opts = dict(
+                title="Train_output",
+                markersize=2,
+            ),
             )
 
+        print('[%d: %d/%d] train loss:  %f' % (epoch, i, len_dataset / 32,  loss_net.item()))
+
+    # Validation
     with torch.no_grad():
         #val on SMPL data
         network.eval()
@@ -260,16 +205,12 @@ for epoch in range(opt.nepoch):
         for i, data in enumerate(dataloader_smpl_test, 0):
             points, fn, idx = data
 
-            points = Variable(points)
             points = points.transpose(2, 1).contiguous()
             points = points.cuda()
-            # SUPER_RESOLUTION optionally reduce the size of the points fed to PointNet
-            # points = points[:,:,:opt.super_points].contiguous()
-            # END SUPER RESOLUTION
             pointsReconstructed = network(points)  # forward pass
             loss_net = torch.mean(
                 (pointsReconstructed - points.transpose(2, 1).contiguous()) ** 2)
-            test_loss_L2_smpl.update(loss_net.data[0])
+            test_loss_L2_smpl.update(loss_net.item())
             # VIZUALIZE
             if i % 10 == 0:
                 vis.scatter(X=points.transpose(2, 1).contiguous()[0].data.cpu(),
@@ -280,78 +221,65 @@ for epoch in range(opt.nepoch):
                             ),
                             )
                 vis.scatter(X=pointsReconstructed[0].data.cpu(),
-                            Y=labels_generated_points[0:pointsReconstructed.size(1)],
                             win='Test_smlp_output',
                             opts=dict(
                                 title="Test_smlp_output",
                                 markersize=2,
                             ),
                             )
+            print('[%d: %d/%d] test smlp loss:  %f' % (epoch, i, len_dataset / 32, loss_net.item()))
+        
 
-            print('[%d: %d/%d] test smlp loss:  %f' % (epoch, i, len_dataset / 32, loss_net.data[0]))
-        if test_loss_L2_smpl.avg != 0:
-            vis.updateTrace(
-                X = np.array([epoch]),
-                Y = np.log(np.array([test_loss_L2_smpl.avg])),
-                win = test_loss_L2_smpl_curve,
-                name = ' val L2 Smpl'
-            )
-
-
-        # VALIDATION on FAUST TEST CHAMFER
-        val_loss.reset()
-        network.eval()
-        loss = chamfer("/home/thibault/Dropbox/ECCV/quantitative_results/faust_sup_converged/")
-        val_loss.update(loss)
-        if val_loss.avg != 0:
-            vis.updateTrace(
-                X = np.array([epoch]),
-                Y = np.log(np.array([loss])),
-                win = val_curve,
-                name = 'Chamfer val'
-            )  # UPDATE CURVES
-
-
-        # VALIDATION on FAUST TRAIN CORRESPONDANCES
-        val_correspondance.reset()
-        network.eval()
-        loss = L2("/home/thibault/Dropbox/ECCV/quantitative_results/faust_centered_bb_train/")
-        val_correspondance.update(loss)
-
-        # VALIDATION on SMPL Augmented
-        val_smpl_augmented.reset()
-        network.eval()
-        loss = L2("/home/thibault/Dropbox/ECCV/quantitative_results/val_dataset_augmented/")
-        val_smpl_augmented.update(loss)
-        # VALIDATION in terms of dense correspondanc
+        # Further evaluation
+        try:
+            # VALIDATION on FAUST TEST CHAMFER
+            loss_faust_centered_bb_test_cleaned.reset()
+            network.eval()
+            loss = chamfer(path_faust_centered_bb_test_cleaned)
+            loss_faust_centered_bb_test_cleaned.update(loss)
+            # VALIDATION on FAUST TRAIN CORRESPONDANCES
+            L2loss_faust_centered_bb_train.reset()
+            network.eval()
+            loss = L2(path_faust_centered_bb_train)
+            L2loss_faust_centered_bb_train.update(loss)
+            # VALIDATION on SMPL Augmented
+            val_smpl_augmented.reset()
+            network.eval()
+            loss = L2(path_val_dataset_augmented)
+            val_smpl_augmented.update(loss)
+        except:
+            print("No further validation")
+            
+        curve_faust_centered_bb_test_cleaned.append(loss_faust_centered_bb_test_cleaned.avg)
+        L2curve_faust_centered_bb_train.append(L2loss_faust_centered_bb_train.avg)
+        L2curve_val_smlp_augmented.append(val_smpl_augmented.avg)
 
         # UPDATE CURVES
-        if val_correspondance.avg != 0:
-            vis.updateTrace(
-                X = np.array([epoch]),
-                Y = np.log(np.array([val_correspondance.avg])),
-                win = val_correspondance_curve,
-                name = ' val correspondance'
-            )
+        L2curve_train_loss_L2_smpl.append(train_loss_L2_smpl.avg)
+        test_loss_L2_smpl_curve.append(test_loss_L2_smpl.avg)
 
-
-
-        #save latest network
-        torch.save(network.state_dict(), '%s/network_last.pth' % (dir_name))
+        vis.line(X=np.column_stack((np.arange(len(L2curve_train_loss_L2_smpl)), np.arange(len(L2curve_val_smlp_augmented)), np.arange(len(curve_faust_centered_bb_test_cleaned)), np.arange(len(L2curve_faust_centered_bb_train)), np.arange(len(test_loss_L2_smpl_curve)))),
+                 Y=np.column_stack((np.array(L2curve_train_loss_L2_smpl), np.array(L2curve_val_smlp_augmented), np.array(curve_faust_centered_bb_test_cleaned), np.array(L2curve_faust_centered_bb_train), np.array(test_loss_L2_smpl_curve))),
+                 win='loss',
+                 opts=dict(title="loss", legend=["L2curve_train_loss_L2_smpl" + opt.env,"train_correspondances_curve" + opt.env,"val_curve" + opt.env,"val_correspondance_curve" + opt.env, "test_loss_L2_smpl_curve" + opt.env], markersize=2, ), )
+        vis.line(X=np.column_stack((np.arange(len(L2curve_train_loss_L2_smpl)), np.arange(len(L2curve_val_smlp_augmented)), np.arange(len(curve_faust_centered_bb_test_cleaned)), np.arange(len(L2curve_faust_centered_bb_train)), np.arange(len(test_loss_L2_smpl_curve)))),
+                 Y=np.log(np.column_stack((np.array(L2curve_train_loss_L2_smpl), np.array(L2curve_val_smlp_augmented), np.array(curve_faust_centered_bb_test_cleaned), np.array(L2curve_faust_centered_bb_train), np.array(test_loss_L2_smpl_curve)))),
+                 win='log',
+                 opts=dict(title="loss", legend=["L2curve_train_loss_L2_smpl" + opt.env,"train_correspondances_curve" + opt.env,"val_curve" + opt.env,"val_correspondance_curve" + opt.env, "test_loss_L2_smpl_curve" + opt.env], markersize=2, ), )
 
         # dump stats in log file
         log_table = {
             "val_smpl_augmented": val_smpl_augmented.avg,
             "train_loss_L2_smpl": train_loss_L2_smpl.avg,
-            "train_loss_correspondances": train_loss_correspondances.avg,
-            "val_loss": val_loss.avg,
-            "val_correspondance": val_correspondance.avg,
-            "val_smpl": test_loss_L2_smpl.avg,
+            "loss_faust_centered_bb_test_cleaned": loss_faust_centered_bb_test_cleaned.avg,
+            "L2loss_faust_centered_bb_train": L2loss_faust_centered_bb_train.avg,
+            "test_loss_L2_smpl": test_loss_L2_smpl.avg,
             "epoch": epoch,
             "lr": lrate,
-            "super_points": opt.super_points,
             "env": opt.env,
         }
         print(log_table)
         with open(logname, 'a') as f:  # open and append
             f.write('json_stats: ' + json.dumps(log_table) + '\n')
+        #save latest network
+        torch.save(network.state_dict(), '%s/network_last.pth' % (dir_name))

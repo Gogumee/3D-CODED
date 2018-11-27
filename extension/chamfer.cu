@@ -1,5 +1,11 @@
+
 #include <stdio.h>
-#include "nnd_cuda.h"
+#include <ATen/ATen.h>
+
+#include <cuda.h>
+#include <cuda_runtime.h>
+
+#include <vector>
 
 
 
@@ -126,9 +132,15 @@ __global__ void NmDistanceKernel(int b,int n,const float * xyz,int m,const float
 		}
 	}
 }
-int NmDistanceKernelLauncher(int b,int n,const float * xyz,int m,const float * xyz2,float * result,int * result_i,float * result2,int * result2_i, cudaStream_t stream){
-	NmDistanceKernel<<<dim3(32,16,1),512>>>(b,n,xyz,m,xyz2,result,result_i);
-	NmDistanceKernel<<<dim3(32,16,1),512>>>(b,m,xyz2,n,xyz,result2,result2_i);
+// int chamfer_cuda_forward(int b,int n,const float * xyz,int m,const float * xyz2,float * result,int * result_i,float * result2,int * result2_i, cudaStream_t stream){
+int chamfer_cuda_forward(at::Tensor xyz1, at::Tensor xyz2, at::Tensor dist1, at::Tensor dist2, at::Tensor idx1, at::Tensor idx2){
+
+	const auto batch_size = xyz1.size(0);
+	const auto n = xyz1.size(1); //num_points point cloud A
+	const auto m = xyz2.size(1); //num_points point cloud B
+
+	NmDistanceKernel<<<dim3(32,16,1),512>>>(batch_size, n, xyz1.data<float>(), m, xyz2.data<float>(), dist1.data<float>(), idx1.data<int>());
+	NmDistanceKernel<<<dim3(32,16,1),512>>>(batch_size, m, xyz2.data<float>(), n, xyz1.data<float>(), dist2.data<float>(), idx2.data<int>());
 
 	cudaError_t err = cudaGetLastError();
 	  if (err != cudaSuccess) {
@@ -160,11 +172,17 @@ __global__ void NmDistanceGradKernel(int b,int n,const float * xyz1,int m,const 
 		}
 	}
 }
-int NmDistanceGradKernelLauncher(int b,int n,const float * xyz1,int m,const float * xyz2,const float * grad_dist1,const int * idx1,const float * grad_dist2,const int * idx2,float * grad_xyz1,float * grad_xyz2, cudaStream_t stream){
-	cudaMemset(grad_xyz1,0,b*n*3*4);
-	cudaMemset(grad_xyz2,0,b*m*3*4);
-	NmDistanceGradKernel<<<dim3(1,16,1),256>>>(b,n,xyz1,m,xyz2,grad_dist1,idx1,grad_xyz1,grad_xyz2);
-	NmDistanceGradKernel<<<dim3(1,16,1),256>>>(b,m,xyz2,n,xyz1,grad_dist2,idx2,grad_xyz2,grad_xyz1);
+// int chamfer_cuda_backward(int b,int n,const float * xyz1,int m,const float * xyz2,const float * grad_dist1,const int * idx1,const float * grad_dist2,const int * idx2,float * grad_xyz1,float * grad_xyz2, cudaStream_t stream){
+int chamfer_cuda_backward(at::Tensor xyz1, at::Tensor xyz2, at::Tensor gradxyz1, at::Tensor gradxyz2, at::Tensor graddist1, at::Tensor graddist2, at::Tensor idx1, at::Tensor idx2){
+	// cudaMemset(grad_xyz1,0,b*n*3*4);
+	// cudaMemset(grad_xyz2,0,b*m*3*4);
+	
+	const auto batch_size = xyz1.size(0);
+	const auto n = xyz1.size(1); //num_points point cloud A
+	const auto m = xyz2.size(1); //num_points point cloud B
+
+	NmDistanceGradKernel<<<dim3(1,16,1),256>>>(batch_size,n,xyz1.data<float>(),m,xyz2.data<float>(),graddist1.data<float>(),idx1.data<int>(),gradxyz1.data<float>(),gradxyz2.data<float>());
+	NmDistanceGradKernel<<<dim3(1,16,1),256>>>(batch_size,m,xyz2.data<float>(),n,xyz1.data<float>(),graddist2.data<float>(),idx2.data<int>(),gradxyz2.data<float>(),gradxyz1.data<float>());
 	
 	cudaError_t err = cudaGetLastError();
 	  if (err != cudaSuccess) {

@@ -5,8 +5,6 @@ from utils import *
 import numpy as np
 import pymesh
 
-mypath = ''
-
 
 class SMPL(data.Dataset):
     def __init__(self, train,  npoints=2500, regular = False, rot= False):
@@ -16,8 +14,9 @@ class SMPL(data.Dataset):
         self.npoints = npoints
         # PATH  : YOU PROBABLY NEED TO EDIT THOSE
         if self.train:
-            self.path = "./data/dataset-bent/"
-            self.path_2 = "./data/dataset-surreal/"
+            self.path = "./data/dataset-surreal/"
+            self.path_2 = "./data/dataset-bent/"
+            self.path_3 = "./data/dataset-continuous/"
         else:
             self.path = "./data/dataset-surreal-val/"
 
@@ -46,6 +45,7 @@ class SMPL(data.Dataset):
         except:
             print("error loading")
             print(index)
+            print(self.path)
             input = pymesh.load_mesh(self.path + str(0) + ".ply")
         points = input.vertices
         if self.rot:
@@ -75,7 +75,7 @@ class SMPL(data.Dataset):
 
     def __len__(self):
         if self.train:
-            return 230000
+            return 300000
         else:
             return 1000
 
