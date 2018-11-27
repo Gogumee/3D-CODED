@@ -35,7 +35,7 @@ This implementation uses [Pytorch](http://pytorch.org/).
 git clone git@github.com:ThibaultGROUEIX/3D-CODED.git ## Download the repo
 conda create --name pytorch-atlasnet python=3.7 ## Create python env
 source activate pytorch-atlasnet
-pip install pandas visdom
+pip install pandas visdom trimesh sklearn
 conda install pytorch torchvision -c pytorch # or from sources if you prefer
 # you're done ! Congrats :)
 ```
