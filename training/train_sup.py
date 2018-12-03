@@ -16,16 +16,12 @@ import datetime
 import visdom
 
 # =============PARAMETERS======================================== #
-path_faust_centered_bb_test_cleaned = "/home/thibault/ssd/3DCODED_data/path_faust_centered_bb_test_cleaned/"
-path_faust_centered_bb_train = "/home/thibault/ssd/3DCODED_data/faust_centered_bb_train/"
-path_val_dataset_augmented = "/home/thibault/ssd/3DCODED_data/val_dataset_augmented/"
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--batchSize', type=int, default=32, help='input batch size')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=8)
-parser.add_argument('--nepoch', type=int, default=35, help='number of epochs to train for')
+parser.add_argument('--nepoch', type=int, default=60, help='number of epochs to train for')
 parser.add_argument('--model', type=str, default='', help='optional reload model path')
-parser.add_argument('--env', type=str, default="3DCODED_supervised", help='visdom environment')
+parser.add_argument('--env', type=str, default="3DCODED_supervised_legacydataset_try2", help='visdom environment')
 
 opt = parser.parse_args()
 print(opt)
@@ -53,18 +49,13 @@ opt.manualSeed = random.randint(1, 10000)  # fix seed
 print("Random Seed: ", opt.manualSeed)
 random.seed(opt.manualSeed)
 torch.manual_seed(opt.manualSeed)
-L2curve_train_loss_L2_smpl = []
-L2curve_val_smlp_augmented = []
-curve_faust_centered_bb_test_cleaned = []
-L2curve_faust_centered_bb_train = []
-test_loss_L2_smpl_curve = []
+L2curve_train_smpl = []
+L2curve_val_smlp = []
+
 # meters to record stats on learning
 train_loss_L2_smpl = AverageValueMeter()
-val_smpl_augmented = AverageValueMeter()
-test_loss_L2_smpl = AverageValueMeter()
-loss_faust_centered_bb_test_cleaned = AverageValueMeter()
+val_loss_L2_smpl = AverageValueMeter()
 tmp_val_loss = AverageValueMeter()
-L2loss_faust_centered_bb_train = AverageValueMeter()
 # ========================================================== #
 
 
@@ -95,69 +86,12 @@ with open(logname, 'a') as f:  # open and append
     f.write(str(network) + '\n')
 # ========================================================== #
 
-# =============Define eval functions L2 and chamfer ========================= #
-def L2(path):
-    tmp_val_loss.reset()
-    with torch.no_grad():
-        for i in range(1000):
-            try:
-                print("val L2 ", i)
-                input = pymesh.load_mesh(path + str(i) + ".ply")
-                points = input.vertices
-                points = points - (input.bbox[0] + input.bbox[1]) / 2
-
-                points = torch.from_numpy(points.astype(np.float32)).contiguous().unsqueeze(0)
-                points = points.transpose(2, 1).contiguous()
-                points = points.cuda()
-                with torch.no_grad():
-                    pointsReconstructed = network(points)
-                    loss_net = torch.mean(
-                        (pointsReconstructed - points.transpose(2, 1).contiguous()) ** 2)
-                # the 8th is rotated so can't be properly reconstructed without pre processing
-                if i%10==8:
-                    continue
-                tmp_val_loss.update(loss_net.item())
-            except:
-                print(path, i)
-                break
-    log_table = {
-        "tmp_val_loss": tmp_val_loss.avg,
-    }
-    print(log_table)
-    return tmp_val_loss.avg
-
-
-def chamfer(path):
-    tmp_val_loss.reset()
-    with torch.no_grad():
-        for i in range(1001):
-            try:
-                print("val chamfer ", i)
-                input = pymesh.load_mesh(path + str(i) + ".ply")
-                points = input.vertices
-                points = torch.from_numpy(points.astype(np.float32)).contiguous().unsqueeze(0)
-                points = points.transpose(2, 1).contiguous()
-                points = points.cuda()
-                with torch.no_grad():
-                    pointsReconstructed = network(points)
-                    dist1, dist2 = distChamfer(points.transpose(2, 1).contiguous(), pointsReconstructed)
-                    loss_net = (torch.mean(dist1)) + (torch.mean(dist2))
-                tmp_val_loss.update(loss_net.item())
-            except:
-                print(path, i)
-                break
-    log_table = {
-        "tmp_val_loss": tmp_val_loss.avg,
-    }
-    print(log_table)
-    return tmp_val_loss.avg
-# ========================================================== #
-
-
-
 # =============start of the learning loop ======================================== #
 for epoch in range(opt.nepoch):
-    if epoch==25:
+    if epoch==36:
+        lrate = lrate/10.0  # learning rate scheduled decay
+        optimizer = optim.Adam(network.parameters(), lr=lrate)
+    if epoch==55:
         lrate = lrate/10.0  # learning rate scheduled decay
         optimizer = optim.Adam(network.parameters(), lr=lrate)
 
@@ -165,6 +99,8 @@ for epoch in range(opt.nepoch):
     train_loss_L2_smpl.reset()
     network.train()
     for i, data in enumerate(dataloader, 0):
+        if i>5:
+            break
         optimizer.zero_grad()
         points, idx,_ = data
 
@@ -201,16 +137,15 @@ for epoch in range(opt.nepoch):
     with torch.no_grad():
         #val on SMPL data
         network.eval()
-        test_loss_L2_smpl.reset()
+        val_loss_L2_smpl.reset()
         for i, data in enumerate(dataloader_smpl_test, 0):
             points, fn, idx = data
-
             points = points.transpose(2, 1).contiguous()
             points = points.cuda()
             pointsReconstructed = network(points)  # forward pass
             loss_net = torch.mean(
                 (pointsReconstructed - points.transpose(2, 1).contiguous()) ** 2)
-            test_loss_L2_smpl.update(loss_net.item())
+            val_loss_L2_smpl.update(loss_net.item())
             # VIZUALIZE
             if i % 10 == 0:
                 vis.scatter(X=points.transpose(2, 1).contiguous()[0].data.cpu(),
@@ -228,52 +163,26 @@ for epoch in range(opt.nepoch):
                             ),
                             )
             print('[%d: %d/%d] test smlp loss:  %f' % (epoch, i, len_dataset / 32, loss_net.item()))
-        
-
-        # Further evaluation
-        try:
-            # VALIDATION on FAUST TEST CHAMFER
-            loss_faust_centered_bb_test_cleaned.reset()
-            network.eval()
-            loss = chamfer(path_faust_centered_bb_test_cleaned)
-            loss_faust_centered_bb_test_cleaned.update(loss)
-            # VALIDATION on FAUST TRAIN CORRESPONDANCES
-            L2loss_faust_centered_bb_train.reset()
-            network.eval()
-            loss = L2(path_faust_centered_bb_train)
-            L2loss_faust_centered_bb_train.update(loss)
-            # VALIDATION on SMPL Augmented
-            val_smpl_augmented.reset()
-            network.eval()
-            loss = L2(path_val_dataset_augmented)
-            val_smpl_augmented.update(loss)
-        except:
-            print("No further validation")
-            
-        curve_faust_centered_bb_test_cleaned.append(loss_faust_centered_bb_test_cleaned.avg)
-        L2curve_faust_centered_bb_train.append(L2loss_faust_centered_bb_train.avg)
-        L2curve_val_smlp_augmented.append(val_smpl_augmented.avg)
+      
 
         # UPDATE CURVES
-        L2curve_train_loss_L2_smpl.append(train_loss_L2_smpl.avg)
-        test_loss_L2_smpl_curve.append(test_loss_L2_smpl.avg)
+        L2curve_train_smpl.append(train_loss_L2_smpl.avg)
+        L2curve_val_smlp.append(val_loss_L2_smpl.avg)
 
-        vis.line(X=np.column_stack((np.arange(len(L2curve_train_loss_L2_smpl)), np.arange(len(L2curve_val_smlp_augmented)), np.arange(len(curve_faust_centered_bb_test_cleaned)), np.arange(len(L2curve_faust_centered_bb_train)), np.arange(len(test_loss_L2_smpl_curve)))),
-                 Y=np.column_stack((np.array(L2curve_train_loss_L2_smpl), np.array(L2curve_val_smlp_augmented), np.array(curve_faust_centered_bb_test_cleaned), np.array(L2curve_faust_centered_bb_train), np.array(test_loss_L2_smpl_curve))),
+        vis.line(X=np.column_stack((np.arange(len(L2curve_train_smpl)), np.arange(len(L2curve_val_smlp)))),
+                 Y=np.column_stack((np.array(L2curve_train_smpl), np.array(L2curve_val_smlp))),
                  win='loss',
-                 opts=dict(title="loss", legend=["L2curve_train_loss_L2_smpl" + opt.env,"train_correspondances_curve" + opt.env,"val_curve" + opt.env,"val_correspondance_curve" + opt.env, "test_loss_L2_smpl_curve" + opt.env], markersize=2, ), )
-        vis.line(X=np.column_stack((np.arange(len(L2curve_train_loss_L2_smpl)), np.arange(len(L2curve_val_smlp_augmented)), np.arange(len(curve_faust_centered_bb_test_cleaned)), np.arange(len(L2curve_faust_centered_bb_train)), np.arange(len(test_loss_L2_smpl_curve)))),
-                 Y=np.log(np.column_stack((np.array(L2curve_train_loss_L2_smpl), np.array(L2curve_val_smlp_augmented), np.array(curve_faust_centered_bb_test_cleaned), np.array(L2curve_faust_centered_bb_train), np.array(test_loss_L2_smpl_curve)))),
+                 opts=dict(title="loss", legend=["L2curve_train_smpl" + opt.env,"L2curve_val_smlp" + opt.env,]))
+
+        vis.line(X=np.column_stack((np.arange(len(L2curve_train_smpl)), np.arange(len(L2curve_val_smlp)))),
+                 Y=np.log(np.column_stack((np.array(L2curve_train_smpl), np.array(L2curve_val_smlp)))),
                  win='log',
-                 opts=dict(title="loss", legend=["L2curve_train_loss_L2_smpl" + opt.env,"train_correspondances_curve" + opt.env,"val_curve" + opt.env,"val_correspondance_curve" + opt.env, "test_loss_L2_smpl_curve" + opt.env], markersize=2, ), )
+                 opts=dict(title="log", legend=["L2curve_train_smpl" + opt.env,"L2curve_val_smlp" + opt.env,]))
 
         # dump stats in log file
         log_table = {
-            "val_smpl_augmented": val_smpl_augmented.avg,
+            "val_loss_L2_smpl": val_loss_L2_smpl.avg,
             "train_loss_L2_smpl": train_loss_L2_smpl.avg,
-            "loss_faust_centered_bb_test_cleaned": loss_faust_centered_bb_test_cleaned.avg,
-            "L2loss_faust_centered_bb_train": L2loss_faust_centered_bb_train.avg,
-            "test_loss_L2_smpl": test_loss_L2_smpl.avg,
             "epoch": epoch,
             "lr": lrate,
             "env": opt.env,

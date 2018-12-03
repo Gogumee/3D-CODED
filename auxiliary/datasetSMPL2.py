@@ -16,7 +16,7 @@ class SMPL(data.Dataset):
         if self.train:
             self.path = "./data/dataset-surreal/"
             self.path_2 = "./data/dataset-bent/"
-            self.path_3 = "./data/dataset-continuous/"
+            self.path_3 = "mypath" #you can add you own generated data if you want (edit len(dataset))
         else:
             self.path = "./data/dataset-surreal-val/"
 
@@ -40,7 +40,8 @@ class SMPL(data.Dataset):
                 input = pymesh.load_mesh(self.path + str(index) + ".ply")
             elif index<230000:
                 input = pymesh.load_mesh(self.path_2 + str(index-200000) + ".ply")
-            else:
+            else: #never happens
+                print("Never happens")
                 input = pymesh.load_mesh(self.path_3 + str(index%70000) + ".ply")
         except:
             print("error loading")
@@ -70,14 +71,14 @@ class SMPL(data.Dataset):
         random_sample = np.random.choice(6890, size=2500, p=self.prop)
         if self.regular_sampling:
             points = points[random_sample]
-        return points, random_sample, 0
+        return points, random_sample, index
 
 
     def __len__(self):
         if self.train:
-            return 300000
+            return 230000
         else:
-            return 1000
+            return 200
 
 
 if __name__ == '__main__':
